@@ -1641,19 +1641,19 @@
 
     <div id="f-name" class="field">
       <label class="field-label">Nombre</label>
-      <input class="inp" type="text" placeholder="Tu nombre o alias">
+      <input class="inp" type="text" id="inp-name" placeholder="Tu nombre o alias">
     </div>
     <div class="field">
       <label class="field-label">Email</label>
-      <input class="inp" type="email" placeholder="tucorreo@email.com">
+      <input class="inp" type="email" id="inp-email" placeholder="tucorreo@email.com">
     </div>
     <div class="field">
       <label class="field-label">Contraseña</label>
-      <input class="inp" type="password" placeholder="••••••••">
+      <input class="inp" type="password" id="inp-pass" placeholder="••••••••">
     </div>
     <div id="f-country" class="field">
       <label class="field-label">País</label>
-      <select class="sel">
+      <select class="sel" id="inp-country">
         <option>España</option><option>México</option><option>Argentina</option>
         <option>Colombia</option><option>Chile</option><option>Otro</option>
       </select>
@@ -1827,34 +1827,37 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:0.8rem">
       <div class="field">
         <label class="field-label">Carta / título <span class="req">*</span></label>
-        <input class="inp" type="text" placeholder="Ej: Liliana of the Veil">
+        <input class="inp" type="text" id="aw-title" placeholder="Ej: Liliana of the Veil">
       </div>
       <div class="field">
         <label class="field-label">Juego <span class="req">*</span></label>
-        <select class="sel">
-          <option>Magic</option><option>Pokémon</option><option>Lorcana</option><option>One Piece</option>
+        <select class="sel" id="aw-game">
+          <option>Magic</option><option>Pokémon</option><option>Lorcana</option><option>One Piece</option><option>Yu-Gi-Oh!</option>
         </select>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:0.8rem">
       <div class="field">
         <label class="field-label">Estado</label>
-        <select class="sel">
-          <option>Portfolio (no en venta)</option>
-          <option>En venta</option>
-          <option>Vendida</option>
+        <select class="sel" id="aw-status">
+          <option value="portfolio">Portfolio (no en venta)</option>
+          <option value="for_sale">En venta</option>
+          <option value="sold">Vendida</option>
         </select>
       </div>
       <div class="field">
         <label class="field-label">Precio (si está en venta)</label>
-        <input class="inp" type="text" placeholder="Ej: 45€">
+        <input class="inp" type="text" id="aw-price" placeholder="Ej: 45">
       </div>
     </div>
-    <div class="upload" style="margin-bottom:1.2rem">
+    <div class="upload" id="aw-upload-area" style="margin-bottom:1.2rem;cursor:pointer" onclick="document.getElementById('aw-file').click()">
       <div class="upload-ic">↑</div>
-      <div class="upload-tx">Sube la imagen de la obra · JPG o PNG</div>
+      <div class="upload-tx" id="aw-upload-tx">Toca para elegir imagen · JPG o PNG</div>
+      <input type="file" id="aw-file" accept="image/*" style="display:none" onchange="previewArtwork(this)">
     </div>
-    <button class="btn-block primary" style="max-width:200px">Publicar obra</button>
+    <img id="aw-preview" style="display:none;width:100%;max-width:280px;border-radius:10px;margin-bottom:1rem;object-fit:cover">
+    <button class="btn-block primary" style="max-width:200px" id="aw-publish-btn" onclick="publishArtwork()">Publicar obra</button>
+    <p class="fnote" id="aw-publish-msg" style="display:none"></p>
   </div>
 </div>
 
