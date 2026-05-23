@@ -1,0 +1,2994 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Alter Life</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPA_URL = 'https://sjtusevmypqzeyzwahtc.supabase.co';
+  const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqdHVzZXZteXBxemV5endhaHRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NTI5NDMsImV4cCI6MjA5NTEyODk0M30.ZO27PcjWHb6nECcOz7XnSHp-d5_fRCzb6wp6uFX3yHc';
+  const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+</script>
+<style>
+  :root {
+    --bg: #08090d;
+    --bg-soft: #0e1018;
+    --surface: #12141e;
+    --surface-2: #181b27;
+    --border: #1e2130;
+    --border-soft: #181a28;
+    --text: #e9e9ec;
+    --text-dim: #9a9ba8;
+    --text-mute: #5a5c6a;
+    --white: #ffffff;
+    --green: #3fae6a;
+    --red: #e05555;
+    --amber: #d6a43a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: rgba(255,255,255,0.12); }
+
+  /* ===== TOPBAR ===== */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    height: 58px;
+    display: flex; align-items: center; gap: 1.2rem;
+    padding: 0 1.5rem;
+    background: rgba(8,9,13,0.9);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .brand {
+    display: flex; align-items: center;
+    cursor: pointer; flex-shrink: 0;
+  }
+  .brand-dot { color: var(--text-mute); }
+  .search { flex: 1; max-width: 480px; position: relative; }
+  .search input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--text);
+    padding: 0.55rem 1rem 0.55rem 2.4rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.86rem; outline: none;
+    transition: border-color 0.15s;
+  }
+  .search input:focus { border-color: #2e3244; }
+  .search input::placeholder { color: var(--text-mute); }
+  .search-ic {
+    position: absolute; left: 0.85rem; top: 50%;
+    transform: translateY(-50%);
+    width: 14px; height: 14px;
+    stroke: var(--text-mute); fill: none; stroke-width: 2;
+  }
+  .topbar-r { display: flex; align-items: center; gap: 0.4rem; margin-left: auto; flex-shrink: 0; }
+
+  /* user menu dropdown */
+  .user-menu { position: relative; }
+  .user-dropdown {
+    display: none; position: absolute; top: calc(100% + 8px); right: 0;
+    width: 230px;
+    background: var(--bg-soft); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.55);
+    z-index: 60;
+  }
+  .user-dropdown.open { display: block; animation: fadeDown 0.15s ease; }
+  .user-dd-head {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.9rem 1rem;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .user-dd-name { font-size: 0.85rem; font-weight: 600; }
+  .user-dd-email { font-size: 0.72rem; color: var(--text-mute); }
+  .user-dd-item {
+    display: flex; align-items: center; gap: 0.65rem;
+    padding: 0.65rem 1rem;
+    font-size: 0.83rem; color: var(--text-dim);
+    cursor: pointer; transition: background 0.12s, color 0.12s;
+  }
+  .user-dd-item:hover { background: var(--surface); color: var(--text); }
+  .user-dd-item span { font-size: 0.85rem; width: 16px; text-align: center; }
+  .user-dd-sep { height: 1px; background: var(--border-soft); margin: 0.2rem 0; }
+  .user-dd-footer {
+    display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;
+    padding: 0.6rem 1rem 0.8rem;
+    font-size: 0.72rem; color: var(--text-mute);
+  }
+  .user-dd-footer span { cursor: pointer; transition: color 0.12s; }
+  .user-dd-footer span:hover { color: var(--text-dim); }
+  .nav-lnk {
+    font-size: 0.84rem; color: var(--text-dim);
+    padding: 0.45rem 0.8rem; border-radius: 8px;
+    cursor: pointer; transition: color 0.15s, background 0.15s;
+    white-space: nowrap;
+  }
+  .nav-lnk:hover, .nav-lnk.active { color: var(--text); background: var(--surface); }
+  .nav-lnk-always {
+    font-size: 0.82rem; color: var(--text-dim);
+    padding: 0.45rem 0.8rem; border-radius: 8px;
+    cursor: pointer; transition: color 0.15s, background 0.15s;
+    white-space: nowrap;
+  }
+  .nav-lnk-always:hover { color: var(--text); background: var(--surface); }
+  .btn-pill {
+    font-size: 0.84rem; font-weight: 500;
+    padding: 0.48rem 1rem; border-radius: 999px;
+    cursor: pointer; border: none; white-space: nowrap;
+    transition: opacity 0.15s, background 0.15s;
+  }
+  .btn-light { background: var(--white); color: var(--bg); }
+  .btn-light:hover { opacity: 0.88; }
+  .btn-ghost { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--surface-2); }
+  .av {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, #2a3245, #141720);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; cursor: pointer; flex-shrink: 0;
+  }
+
+  /* ===== FILTER BAR ===== */
+  .filter-bar {
+    position: sticky; top: 58px; z-index: 40;
+    background: rgba(8,9,13,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .filter-bar-row {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.7rem 1.5rem;
+  }
+
+  /* game dropdown */
+  .game-dropdown { position: relative; flex-shrink: 0; }
+  .game-dropdown-btn {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 0.84rem; font-weight: 500;
+    color: var(--text);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 0.52rem 0.85rem;
+    cursor: pointer; transition: border-color 0.15s;
+    min-width: 140px;
+  }
+  .game-dropdown-btn:hover { border-color: #2e3244; }
+  .game-dropdown-btn.open { border-color: #2e3244; }
+  .game-dropdown-arrow { margin-left: auto; font-size: 0.7rem; color: var(--text-mute); transition: transform 0.15s; }
+  .game-dropdown-btn.open .game-dropdown-arrow { transform: rotate(180deg); }
+
+  .game-logo {
+    width: 20px; height: 20px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.68rem; font-weight: 700; flex-shrink: 0;
+  }
+  .gl-all      { background: linear-gradient(135deg,#2a3245,#141720); color: var(--text-dim); }
+  .gl-magic    { background: #1a2a4a; color: #6a9fd8; }
+  .gl-pokemon  { background: #3a2a10; color: #e8b84b; }
+  .gl-lorcana  { background: #2a1a3a; color: #b06ad8; }
+  .gl-onepiece { background: #3a1a10; color: #e86a3a; }
+  .gl-yugioh   { background: #1a3a2a; color: #4ab87a; }
+
+  .game-dropdown-menu {
+    display: none; position: absolute; top: calc(100% + 6px); left: 0;
+    min-width: 200px;
+    background: var(--bg-soft); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+    z-index: 10;
+  }
+  .game-dropdown-menu.open { display: block; animation: fadeDown 0.15s ease; }
+  @keyframes fadeDown { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+
+  .game-option {
+    display: flex; align-items: center; gap: 0.65rem;
+    padding: 0.7rem 1rem; cursor: pointer;
+    font-size: 0.84rem; font-weight: 500; color: var(--text-dim);
+    transition: background 0.12s, color 0.12s;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .game-option:last-child { border-bottom: none; }
+  .game-option:hover { background: var(--surface); color: var(--text); }
+  .game-option.selected { color: var(--text); }
+  .game-check {
+    margin-left: auto; font-size: 0.75rem;
+    color: var(--white); opacity: 0;
+  }
+  .game-option.selected .game-check { opacity: 1; }
+
+  /* filter button — right next to dropdown */
+  .filter-btn {
+    display: flex; align-items: center; gap: 0.45rem;
+    font-size: 0.82rem; font-weight: 500;
+    color: var(--text-dim);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 0.52rem 0.85rem;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap; flex-shrink: 0;
+  }
+  .filter-btn:hover { color: var(--text); border-color: #2e3244; }
+  .filter-btn.active { color: var(--text); border-color: var(--text-dim); }
+  .filter-btn-ic {
+    display: flex; flex-direction: column; gap: 3px; flex-shrink: 0;
+  }
+  .filter-btn-ic span {
+    display: block; height: 1.5px; background: currentColor; border-radius: 2px;
+    transition: width 0.15s;
+  }
+  .filter-btn-ic span:nth-child(1) { width: 14px; }
+  .filter-btn-ic span:nth-child(2) { width: 10px; }
+  .filter-btn-ic span:nth-child(3) { width: 6px; }
+  .filter-count {
+    background: var(--white); color: var(--bg);
+    font-size: 0.62rem; font-weight: 700;
+    width: 15px; height: 15px; border-radius: 50%;
+    display: none; align-items: center; justify-content: center;
+  }
+
+  /* active filter tags row — only visible when filters applied */
+  .active-filters {
+    display: none; gap: 0.4rem; flex-wrap: wrap;
+    padding: 0 1.5rem 0.65rem;
+  }
+  .active-filters.has-tags { display: flex; }
+  .filter-tag {
+    display: flex; align-items: center; gap: 0.35rem;
+    font-size: 0.74rem; font-weight: 500; color: var(--text-dim);
+    padding: 0.28rem 0.45rem 0.28rem 0.72rem;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 999px;
+  }
+  .filter-tag-x {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.58rem; cursor: pointer; flex-shrink: 0;
+    transition: background 0.15s; color: var(--text-dim);
+  }
+  .filter-tag-x:hover { background: #3a3e50; color: var(--text); }
+
+  /* filter popup — slide from right */
+  .filter-popup-bg {
+    display: none; position: fixed; inset: 0; z-index: 90;
+    background: rgba(4,4,8,0.55); backdrop-filter: blur(4px);
+  }
+  .filter-popup-bg.open { display: block; }
+  .filter-popup {
+    position: absolute; top: 0; right: 0;
+    width: 330px; height: 100vh;
+    background: var(--bg-soft); border-left: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    animation: slideIn 0.2s ease;
+  }
+  @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  @media (max-width: 400px) { .filter-popup { width: 100vw; } }
+
+  .popup-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.1rem 1.2rem; border-bottom: 1px solid var(--border-soft); flex-shrink: 0;
+  }
+  .popup-title { font-size: 0.95rem; font-weight: 600; }
+  .popup-close {
+    width: 27px; height: 27px; border-radius: 50%;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-dim); cursor: pointer; font-size: 0.82rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.15s;
+  }
+  .popup-close:hover { color: var(--text); }
+  .popup-body { flex: 1; overflow-y: auto; padding: 1.1rem 1.2rem; }
+  .popup-section { margin-bottom: 1.5rem; }
+  .popup-section-title {
+    font-size: 0.68rem; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-mute); margin-bottom: 0.65rem;
+  }
+  .popup-options { display: flex; flex-wrap: wrap; gap: 0.38rem; }
+  .popup-opt {
+    font-size: 0.78rem; font-weight: 500; color: var(--text-dim);
+    padding: 0.38rem 0.82rem; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .popup-opt:hover { border-color: #2e3244; color: var(--text); }
+  .popup-opt.on { color: var(--bg); background: var(--white); border-color: var(--white); }
+  .popup-foot {
+    padding: 0.9rem 1.2rem; border-top: 1px solid var(--border-soft);
+    display: flex; gap: 0.55rem; flex-shrink: 0;
+  }
+
+  /* ===== PAGES ===== */
+  .page { display: none; }
+  .page.active { display: block; animation: fade 0.22s ease; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+  /* ===== WALL / MASONRY ===== */
+  .grid-wrap { padding: 1.2rem 1.5rem; }
+  .masonry { columns: 5; column-gap: 0.9rem; }
+  @media (max-width: 1400px) { .masonry { columns: 4; } }
+  @media (max-width: 1050px) { .masonry { columns: 3; } }
+  @media (max-width: 700px)  { .masonry { columns: 2; } }
+
+  .pin { break-inside: avoid; margin-bottom: 0.9rem; cursor: pointer; }
+  .pin-card {
+    position: relative; border-radius: 12px; overflow: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    aspect-ratio: 63/88;
+    transition: transform 0.16s ease;
+  }
+  .pin:hover .pin-card { transform: translateY(-3px); }
+
+  /* card art backgrounds */
+  .a1  { background: radial-gradient(ellipse at 50% 30%, #3a2d55 0%, #14101f 70%); }
+  .a2  { background: radial-gradient(ellipse at 40% 60%, #1f3a4c 0%, #0d161e 70%); }
+  .a3  { background: radial-gradient(ellipse at 60% 40%, #4c2a2a 0%, #1c0f0f 70%); }
+  .a4  { background: radial-gradient(ellipse at 50% 50%, #2a4c38 0%, #101c14 70%); }
+  .a5  { background: radial-gradient(ellipse at 45% 35%, #4c4228 0%, #1c1810 70%); }
+  .a6  { background: radial-gradient(ellipse at 55% 45%, #3c2848 0%, #16101e 70%); }
+  .a7  { background: radial-gradient(ellipse at 50% 65%, #2a304c 0%, #10131f 70%); }
+  .a8  { background: radial-gradient(ellipse at 40% 40%, #4c3428 0%, #1c1410 70%); }
+  .a9  { background: radial-gradient(ellipse at 60% 50%, #28424c 0%, #101a1e 70%); }
+  .a10 { background: radial-gradient(ellipse at 50% 30%, #422842 0%, #1c101c 70%); }
+
+  /* sale state badge */
+  .pin-badge {
+    position: absolute; top: 8px; left: 8px; z-index: 2;
+    font-size: 0.64rem; font-weight: 600;
+    padding: 0.22rem 0.55rem; border-radius: 999px;
+  }
+  .badge-sale    { background: rgba(63,174,106,0.18); color: var(--green); border: 1px solid rgba(63,174,106,0.3); }
+  .badge-sold    { background: rgba(224,85,85,0.18);  color: var(--red);   border: 1px solid rgba(224,85,85,0.3); }
+  .badge-folio   { background: rgba(90,92,106,0.25);  color: var(--text-mute); border: 1px solid var(--border); }
+
+  /* hover overlay */
+  .pin-ov {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.78) 0%, transparent 50%);
+    opacity: 0; transition: opacity 0.16s;
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 0.7rem;
+  }
+  .pin:hover .pin-ov { opacity: 1; }
+  .pin-save {
+    align-self: flex-end;
+    background: var(--white); color: var(--bg);
+    font-size: 0.75rem; font-weight: 600;
+    padding: 0.4rem 0.8rem; border-radius: 999px;
+    border: none; cursor: pointer;
+  }
+  .pin-ov-artist { display: flex; align-items: center; gap: 0.45rem; }
+  .pin-ov-dot {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--surface-2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.6rem; flex-shrink: 0;
+  }
+  .pin-ov-name { font-size: 0.76rem; font-weight: 500; color: var(--white); }
+
+  .pin-meta { padding: 0.5rem 0.2rem 0; }
+  .pin-title { font-size: 0.83rem; font-weight: 500; color: var(--text); line-height: 1.3; }
+  .pin-sub   { font-size: 0.73rem; color: var(--text-mute); margin-top: 0.1rem; }
+  .pin-price { font-size: 0.78rem; color: var(--text-dim); margin-top: 0.15rem; font-weight: 500; }
+
+  /* ===== OBRA MODAL ===== */
+  .modal-bg {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(4,4,8,0.82);
+    backdrop-filter: blur(8px);
+    padding: 2.5rem 1.5rem;
+    overflow-y: auto;
+  }
+  .modal-bg.open { display: flex; align-items: flex-start; justify-content: center; }
+  .modal {
+    width: 100%; max-width: 820px;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 18px; overflow: hidden;
+    display: grid; grid-template-columns: 1fr 320px;
+    animation: pop 0.18s ease;
+    position: relative;
+  }
+  @keyframes pop { from { transform: scale(0.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @media (max-width: 700px) { .modal { grid-template-columns: 1fr; max-width: 400px; } }
+
+  .modal-art {
+    background: var(--bg);
+    padding: 2rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-card-img {
+    width: 100%; max-width: 260px;
+    aspect-ratio: 63/88;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  .modal-info { padding: 1.6rem 1.5rem; display: flex; flex-direction: column; }
+  .modal-close {
+    position: absolute; top: 0.9rem; right: 0.9rem;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(0,0,0,0.5); border: 1px solid var(--border);
+    color: var(--text-dim); cursor: pointer;
+    font-size: 0.9rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.15s;
+  }
+  .modal-close:hover { color: var(--text); }
+  .modal-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.35rem; font-weight: 600;
+    line-height: 1.2; margin-bottom: 0.2rem;
+  }
+  .modal-game { font-size: 0.78rem; color: var(--text-mute); margin-bottom: 0.8rem; }
+  .modal-state { margin-bottom: 1.2rem; }
+
+  .modal-artist-row {
+    display: flex; align-items: center; gap: 0.65rem;
+    padding: 0.85rem;
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .modal-artist-row:hover { background: var(--surface-2); }
+  .modal-av {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: linear-gradient(135deg, #2a3245, #141720);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 1rem;
+  }
+  .modal-artist-name { font-size: 0.9rem; font-weight: 600; }
+  .modal-artist-meta { font-size: 0.74rem; color: var(--text-mute); }
+  .modal-arrow { margin-left: auto; color: var(--text-mute); font-size: 0.9rem; }
+
+  .modal-desc { font-size: 0.86rem; color: var(--text-dim); line-height: 1.6; margin-bottom: 1.2rem; }
+  .modal-price {
+    font-family: 'Fraunces', serif;
+    font-size: 1.5rem; font-weight: 600;
+    margin-bottom: 1.2rem;
+  }
+  .modal-price span { font-size: 0.8rem; font-weight: 400; color: var(--text-mute); font-family: 'Inter', sans-serif; }
+  .modal-actions { margin-top: auto; display: flex; flex-direction: column; gap: 0.5rem; }
+  .btn-block {
+    width: 100%; font-size: 0.86rem; font-weight: 500;
+    padding: 0.78rem; border-radius: 10px;
+    cursor: pointer; border: none; transition: opacity 0.15s, background 0.15s;
+  }
+  .btn-block.primary { background: var(--white); color: var(--bg); }
+  .btn-block.primary:hover { opacity: 0.86; }
+  .btn-block.primary:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-block.secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+  .btn-block.secondary:hover { background: var(--surface-2); }
+
+  /* ===== ARTIST PROFILE ===== */
+  .profile-top {
+    max-width: 1100px; margin: 0 auto;
+    padding: 2.5rem 1.5rem 1.2rem;
+    display: flex; align-items: flex-start; gap: 1.8rem;
+    flex-wrap: wrap;
+  }
+  .profile-av-lg {
+    width: 88px; height: 88px; border-radius: 50%;
+    background: linear-gradient(135deg, #2f3855, #141720);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.2rem; flex-shrink: 0;
+  }
+  .profile-info { flex: 1; min-width: 200px; }
+  .profile-name {
+    font-family: 'Fraunces', serif;
+    font-size: 1.65rem; font-weight: 600; margin-bottom: 0.3rem;
+  }
+  .profile-bio { font-size: 0.9rem; color: var(--text-dim); line-height: 1.6; max-width: 480px; margin-bottom: 0.8rem; }
+  .profile-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
+  .profile-tag {
+    font-size: 0.74rem; color: var(--text-mute);
+    padding: 0.28rem 0.7rem; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--border);
+  }
+  .profile-meta { display: flex; gap: 1.4rem; font-size: 0.8rem; color: var(--text-mute); flex-wrap: wrap; }
+  .profile-meta b { color: var(--text); font-weight: 600; }
+  .profile-cta { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; padding-top: 0.4rem; }
+
+  .social-links { display: flex; gap: 0.4rem; }
+  .social-link {
+    width: 36px; height: 36px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-dim); cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .social-link:hover { color: var(--text); border-color: #2e3244; background: var(--surface-2); }
+
+  /* availability badge on profile */
+  .avail-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-size: 0.76rem; font-weight: 500;
+    padding: 0.35rem 0.75rem; border-radius: 999px;
+    margin-bottom: 1rem;
+  }
+  .avail-open { background: rgba(63,174,106,0.12); color: var(--green); border: 1px solid rgba(63,174,106,0.25); }
+  .avail-closed { background: rgba(224,85,85,0.12); color: var(--red); border: 1px solid rgba(224,85,85,0.25); }
+  .avail-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+  .profile-divider { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; border-top: 1px solid var(--border-soft); }
+
+  /* ===== AUTH ===== */
+  .auth-wrap { max-width: 390px; margin: 0 auto; padding: 3.5rem 1.5rem 4rem; }
+  .auth-logo {
+    font-family: 'Fraunces', serif;
+    font-size: 1.55rem; font-weight: 600;
+    text-align: center; margin-bottom: 0.35rem;
+  }
+  .auth-sub { text-align: center; font-size: 0.86rem; color: var(--text-mute); margin-bottom: 1.8rem; }
+  .auth-tabs {
+    display: flex; gap: 0.3rem;
+    background: var(--surface); border: 1px solid var(--border-soft);
+    border-radius: 999px; padding: 0.22rem; margin-bottom: 1.5rem;
+  }
+  .auth-tab {
+    flex: 1; font-size: 0.82rem; font-weight: 500;
+    color: var(--text-dim); background: transparent; border: none;
+    padding: 0.52rem; border-radius: 999px; cursor: pointer; transition: all 0.15s;
+  }
+  .auth-tab.active { color: var(--bg); background: var(--white); }
+
+  .social-btn {
+    width: 100%;
+    display: flex; align-items: center; justify-content: center; gap: 0.65rem;
+    font-size: 0.88rem; font-weight: 500; color: var(--text);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 0.82rem; cursor: pointer;
+    transition: background 0.15s, border-color 0.15s; margin-bottom: 0.5rem;
+  }
+  .social-btn:hover { background: var(--surface-2); border-color: #2e3244; }
+
+  .auth-div {
+    display: flex; align-items: center; gap: 0.7rem;
+    margin: 0.8rem 0; color: var(--text-mute); font-size: 0.78rem;
+  }
+  .auth-div::before, .auth-div::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .field { margin-bottom: 0.9rem; }
+  .field-label { display: block; font-size: 0.83rem; color: var(--text-dim); margin-bottom: 0.35rem; }
+  .field-label .req { color: #e07755; }
+  .inp, .sel, .txt {
+    width: 100%;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text);
+    padding: 0.7rem 0.85rem;
+    font-family: 'Inter', sans-serif; font-size: 0.88rem;
+    outline: none; transition: border-color 0.15s;
+  }
+  .inp:focus, .sel:focus, .txt:focus { border-color: #2e3244; }
+  .inp::placeholder, .txt::placeholder { color: var(--text-mute); }
+  .txt { resize: vertical; min-height: 90px; }
+  .sel {
+    appearance: none; cursor: pointer;
+    padding-right: 2.2rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%235a5c6a' stroke-width='1.6' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 0.85rem center;
+  }
+  .sel option { background: var(--surface); }
+
+  .optin {
+    display: flex; gap: 0.65rem;
+    padding: 0.85rem; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 10px;
+    margin: 0.5rem 0 1.1rem; cursor: pointer; transition: border-color 0.15s;
+  }
+  .optin:hover { border-color: #2e3244; }
+  .optin.on { border-color: #3a3e55; background: var(--surface-2); }
+  .optin-box {
+    width: 18px; height: 18px; flex-shrink: 0;
+    border: 1px solid var(--border); border-radius: 5px;
+    background: var(--bg); margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .optin.on .optin-box { background: var(--white); border-color: var(--white); }
+  .optin-box::after { content: '✓'; font-size: 0.72rem; color: var(--bg); font-weight: 700; opacity: 0; }
+  .optin.on .optin-box::after { opacity: 1; }
+  .optin-title { font-size: 0.86rem; font-weight: 600; }
+  .optin-desc { font-size: 0.76rem; color: var(--text-mute); margin-top: 0.12rem; line-height: 1.4; }
+
+  .auth-alt { text-align: center; font-size: 0.8rem; color: var(--text-mute); margin-top: 1.1rem; }
+  .auth-alt a { color: var(--text); cursor: pointer; }
+
+  /* ===== ARTIST ONBOARDING ===== */
+  .ob-wrap { max-width: 520px; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
+  .ob-step {
+    display: flex; gap: 0.35rem; margin-bottom: 1.8rem;
+  }
+  .ob-dot { flex: 1; height: 3px; border-radius: 999px; background: var(--border); }
+  .ob-dot.on { background: var(--text-dim); }
+  .ob-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.5rem; font-weight: 600; margin-bottom: 0.3rem;
+  }
+  .ob-sub { font-size: 0.86rem; color: var(--text-mute); margin-bottom: 1.8rem; line-height: 1.5; }
+
+  .upload {
+    border: 1px dashed var(--border); border-radius: 10px;
+    padding: 1.4rem; text-align: center; cursor: pointer;
+    background: var(--surface); transition: border-color 0.15s;
+  }
+  .upload:hover { border-color: #2e3244; }
+  .upload-ic { font-size: 1.3rem; opacity: 0.4; margin-bottom: 0.2rem; }
+  .upload-tx { font-size: 0.76rem; color: var(--text-mute); }
+
+  .games-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .game-chip {
+    font-size: 0.8rem; color: var(--text-dim);
+    padding: 0.42rem 0.88rem; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .game-chip:hover { border-color: #2e3244; }
+  .game-chip.on { color: var(--bg); background: var(--white); border-color: var(--white); }
+
+  /* contact channel picker */
+  .contact-pick { display: flex; gap: 0.6rem; }
+  .contact-opt {
+    flex: 1;
+    display: flex; align-items: center; gap: 0.55rem;
+    padding: 0.8rem 0.9rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; cursor: pointer; transition: all 0.15s;
+  }
+  .contact-opt:hover { border-color: #2e3244; }
+  .contact-opt.on { border-color: #3a3e55; background: var(--surface-2); }
+  .contact-opt-ic { font-size: 1rem; }
+  .contact-opt-label { font-size: 0.86rem; font-weight: 500; flex: 1; }
+  .contact-opt-check {
+    width: 17px; height: 17px; border-radius: 50%;
+    background: var(--white); color: var(--bg);
+    font-size: 0.65rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.15s;
+  }
+  .contact-opt.on .contact-opt-check { opacity: 1; }
+
+  .form-section-label {
+    font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-mute); margin: 1.4rem 0 0.8rem;
+  }
+
+  /* ===== ARTIST DASHBOARD ===== */
+  .dash-wrap { max-width: 900px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  .dash-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.8rem; flex-wrap: wrap; gap: 1rem;
+  }
+  .dash-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.65rem; font-weight: 600;
+  }
+
+  .dash-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem;
+    margin-bottom: 2rem;
+  }
+  @media (max-width: 580px) { .dash-stats { grid-template-columns: repeat(3,1fr); } }
+  .dash-stat {
+    padding: 1rem 1.1rem;
+    background: var(--surface); border: 1px solid var(--border-soft);
+    border-radius: 12px;
+  }
+  .dash-stat-n {
+    font-family: 'Fraunces', serif;
+    font-size: 1.6rem; font-weight: 600; line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+  .dash-stat-l { font-size: 0.76rem; color: var(--text-mute); }
+
+  /* availability toggle */
+  .avail-toggle {
+    display: flex; align-items: center; gap: 0.7rem;
+    padding: 0.9rem 1rem;
+    background: var(--surface); border: 1px solid var(--border-soft);
+    border-radius: 12px; margin-bottom: 1.8rem; cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .avail-toggle:hover { border-color: #2e3244; }
+  .avail-toggle-txt { flex: 1; }
+  .avail-toggle-label { font-size: 0.9rem; font-weight: 600; }
+  .avail-toggle-desc { font-size: 0.76rem; color: var(--text-mute); margin-top: 0.1rem; }
+  .toggle-switch {
+    width: 40px; height: 22px; border-radius: 999px;
+    background: var(--border); position: relative;
+    transition: background 0.2s; flex-shrink: 0;
+  }
+  .toggle-switch.on { background: var(--green); }
+  .toggle-switch::after {
+    content: ''; position: absolute;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--white); top: 3px; left: 3px;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .toggle-switch.on::after { transform: translateX(18px); }
+
+  /* requests / inbox */
+  .dash-section-title {
+    font-size: 0.88rem; font-weight: 600;
+    color: var(--text-dim); margin-bottom: 0.9rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .dash-badge {
+    font-size: 0.7rem; font-weight: 600;
+    padding: 0.15rem 0.5rem; border-radius: 999px;
+    background: rgba(214,164,58,0.15); color: var(--amber);
+    border: 1px solid rgba(214,164,58,0.25);
+  }
+
+  .request-card {
+    display: flex; gap: 1rem;
+    padding: 1rem;
+    background: var(--surface); border: 1px solid var(--border-soft);
+    border-radius: 12px; margin-bottom: 0.7rem;
+    transition: border-color 0.15s;
+  }
+  .request-card:hover { border-color: var(--border); }
+  .request-thumb {
+    width: 56px; flex-shrink: 0;
+    aspect-ratio: 63/88; border-radius: 7px;
+    border: 1px solid var(--border);
+  }
+  .request-body { flex: 1; min-width: 0; }
+  .request-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.25rem; }
+  .request-title { font-size: 0.9rem; font-weight: 600; }
+  .request-time { font-size: 0.74rem; color: var(--text-mute); white-space: nowrap; }
+  .request-client { font-size: 0.78rem; color: var(--text-mute); margin-bottom: 0.5rem; }
+  .request-preview { font-size: 0.82rem; color: var(--text-dim); line-height: 1.5; margin-bottom: 0.7rem; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .request-actions { display: flex; gap: 0.5rem; }
+  .btn-sm {
+    font-size: 0.78rem; font-weight: 500;
+    padding: 0.42rem 0.85rem; border-radius: 8px;
+    cursor: pointer; border: none; transition: opacity 0.15s, background 0.15s;
+  }
+  .btn-accept { background: rgba(63,174,106,0.15); color: var(--green); border: 1px solid rgba(63,174,106,0.25); }
+  .btn-accept:hover { background: rgba(63,174,106,0.25); }
+  .btn-decline { background: var(--surface-2); color: var(--text-dim); border: 1px solid var(--border); }
+  .btn-decline:hover { background: var(--border); }
+  .btn-read { background: var(--surface-2); color: var(--text-dim); border: 1px solid var(--border); font-size: 0.76rem; }
+
+  /* form builder */
+  .form-builder {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 14px; overflow: hidden;
+    margin-bottom: 1.8rem;
+  }
+  .fb-header {
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid var(--border-soft);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .fb-title { font-size: 0.88rem; font-weight: 600; }
+  .fb-subtitle { font-size: 0.74rem; color: var(--text-mute); margin-top: 0.1rem; }
+
+  .fb-fields { padding: 0.8rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .fb-field {
+    display: flex; align-items: center; gap: 0.7rem;
+    padding: 0.75rem 0.9rem;
+    background: var(--bg-soft); border: 1px solid var(--border);
+    border-radius: 9px; cursor: grab;
+    transition: border-color 0.15s;
+  }
+  .fb-field:hover { border-color: #2e3244; }
+  .fb-drag { color: var(--text-mute); font-size: 0.8rem; cursor: grab; }
+  .fb-field-type {
+    font-size: 0.68rem; font-weight: 600;
+    padding: 0.18rem 0.5rem; border-radius: 5px;
+    background: var(--surface-2); color: var(--text-mute);
+    white-space: nowrap;
+  }
+  .fb-field-label { font-size: 0.85rem; flex: 1; }
+  .fb-field-req { font-size: 0.68rem; color: #e07755; }
+  .fb-field-del {
+    color: var(--text-mute); cursor: pointer; font-size: 0.8rem;
+    padding: 0.2rem 0.4rem; border-radius: 5px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .fb-field-del:hover { color: var(--red); background: rgba(224,85,85,0.1); }
+
+  .fb-add {
+    padding: 0.7rem 0.8rem;
+    border-top: 1px solid var(--border-soft);
+    display: flex; gap: 0.4rem; flex-wrap: wrap;
+  }
+  .fb-add-btn {
+    font-size: 0.76rem; color: var(--text-mute);
+    padding: 0.35rem 0.75rem; border-radius: 7px;
+    background: transparent; border: 1px dashed var(--border);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .fb-add-btn:hover { color: var(--text-dim); border-color: #2e3244; }
+
+  /* ===== ABOUT PAGE ===== */
+  .about-hero {
+    padding: 4rem 1.5rem 3.5rem;
+    text-align: center;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(58,45,85,0.4) 0%, transparent 60%),
+      var(--bg);
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .about-hero-inner { max-width: 620px; margin: 0 auto; }
+  .about-eyebrow {
+    font-size: 0.72rem; font-weight: 600;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 1.1rem;
+  }
+  .about-h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 600; line-height: 1.1;
+    margin-bottom: 1.1rem;
+  }
+  .about-h1 em { font-style: italic; color: var(--text-dim); }
+  .about-lead {
+    font-size: 1.05rem; color: var(--text-dim);
+    line-height: 1.65; margin-bottom: 1.8rem;
+  }
+
+  .about-section {
+    max-width: 900px; margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+  .about-section-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.5rem; font-weight: 600;
+    text-align: center; margin-bottom: 2rem;
+  }
+
+  .how-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;
+  }
+  @media (max-width: 700px) { .how-grid { grid-template-columns: 1fr; } }
+  .how-card {
+    padding: 1.6rem 1.4rem;
+    background: var(--surface); border: 1px solid var(--border-soft);
+    border-radius: 14px;
+  }
+  .how-num {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--white); color: var(--bg);
+    font-family: 'Fraunces', serif; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 0.9rem;
+  }
+  .how-title { font-size: 1rem; font-weight: 600; margin-bottom: 0.4rem; }
+  .how-text { font-size: 0.86rem; color: var(--text-dim); line-height: 1.6; }
+
+  .about-split {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  }
+  @media (max-width: 700px) { .about-split { grid-template-columns: 1fr; } }
+  .about-split-card {
+    padding: 1.8rem 1.6rem;
+    background: var(--surface); border: 1px solid var(--border-soft);
+    border-radius: 14px;
+    display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem;
+  }
+  .about-split-ic { font-size: 1.8rem; margin-bottom: 0.3rem; }
+  .about-split-title { font-family: 'Fraunces', serif; font-size: 1.2rem; font-weight: 600; }
+  .about-split-text { font-size: 0.88rem; color: var(--text-dim); line-height: 1.6; }
+
+  .about-faq { max-width: 640px; margin: 0 auto; }
+  .faq-item {
+    padding: 1.1rem 0;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .faq-q { font-size: 0.92rem; font-weight: 600; margin-bottom: 0.4rem; }
+  .faq-a { font-size: 0.86rem; color: var(--text-dim); line-height: 1.6; }
+
+  .about-cta {
+    text-align: center;
+    padding: 3.5rem 1.5rem 4rem;
+    border-top: 1px solid var(--border-soft);
+  }
+  .about-cta-title { font-family: 'Fraunces', serif; font-size: 1.5rem; font-weight: 600; margin-bottom: 0.3rem; }
+  .about-cta-sub { font-size: 0.9rem; color: var(--text-mute); }
+
+  /* ===== SETTINGS ===== */
+  .set-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.85rem 1rem;
+    background: var(--surface); border: 1px solid var(--border-soft);
+    border-radius: 10px; margin-bottom: 0.6rem;
+  }
+  .set-row-label { font-size: 0.86rem; color: var(--text-dim); }
+
+  .set-danger {
+    margin-top: 2.5rem; padding-top: 1.5rem;
+    border-top: 1px solid var(--border-soft);
+  }
+  .set-danger-title {
+    font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--red); margin-bottom: 0.8rem;
+  }
+  .set-danger-btn {
+    font-size: 0.83rem; font-weight: 500;
+    color: var(--red);
+    background: transparent; border: 1px solid rgba(224,85,85,0.3);
+    border-radius: 9px; padding: 0.6rem 1.1rem; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .set-danger-btn:hover { background: rgba(224,85,85,0.1); }
+
+  /* ===== REVIEWS ===== */
+  .reviews-wrap { max-width: 1100px; margin: 0 auto; padding: 1.8rem 1.5rem; }
+  .reviews-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.3rem; gap: 1rem; flex-wrap: wrap;
+  }
+  .reviews-title { font-family: 'Fraunces', serif; font-size: 1.2rem; font-weight: 600; }
+  .reviews-sub { font-size: 0.82rem; color: var(--text-mute); margin-top: 0.15rem; }
+  .reviews-sub b { color: var(--amber); }
+  .reviews-list { display: flex; flex-direction: column; gap: 0.8rem; }
+  .review {
+    padding: 1.1rem 1.2rem;
+    background: var(--surface); border: 1px solid var(--border-soft);
+    border-radius: 12px;
+  }
+  .review-top {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 0.6rem;
+  }
+  .review-author { display: flex; align-items: center; gap: 0.6rem; }
+  .review-av {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: linear-gradient(135deg, #2a3245, #141720);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 600; flex-shrink: 0;
+  }
+  .review-name { font-size: 0.85rem; font-weight: 600; }
+  .review-stars { font-size: 0.78rem; color: var(--amber); letter-spacing: 0.05em; }
+  .review-date { font-size: 0.74rem; color: var(--text-mute); white-space: nowrap; }
+  .review-text { font-size: 0.86rem; color: var(--text-dim); line-height: 1.6; }
+
+  /* ===== RATING MODAL ===== */
+  .rating-box {
+    width: 100%; max-width: 400px;
+    background: var(--bg-soft); border: 1px solid var(--border);
+    border-radius: 18px; position: relative;
+    animation: pop 0.18s ease;
+  }
+  .rating-box-inner { padding: 2rem 1.7rem 1.7rem; }
+  .rating-av {
+    width: 54px; height: 54px; border-radius: 50%;
+    background: linear-gradient(135deg, #2f3855, #141720);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; margin-bottom: 0.9rem;
+  }
+  .rating-title { font-family: 'Fraunces', serif; font-size: 1.25rem; font-weight: 600; margin-bottom: 0.3rem; }
+  .rating-sub { font-size: 0.84rem; color: var(--text-mute); line-height: 1.5; margin-bottom: 1.2rem; }
+  .star-input { display: flex; gap: 0.35rem; margin-bottom: 0.4rem; }
+  .star-input .star {
+    font-size: 2rem; color: var(--border);
+    cursor: pointer; transition: color 0.12s, transform 0.12s;
+    line-height: 1;
+  }
+  .star-input .star:hover { transform: scale(1.15); }
+  .star-input .star.lit { color: var(--amber); }
+  .star-hint { font-size: 0.78rem; color: var(--text-mute); margin-bottom: 1rem; height: 1rem; }
+
+  /* ===== DONATION WIDGET ===== */
+  .donate {
+    position: fixed; bottom: 1.3rem; right: 1.3rem;
+    z-index: 80;
+    display: flex; flex-direction: column-reverse;
+    align-items: flex-end; gap: 0.5rem;
+  }
+  .donate-toggle {
+    display: flex; align-items: center; gap: 0.55rem;
+    font-size: 0.92rem; font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #f0913a 0%, #e0633a 100%);
+    border: none; padding: 0.82rem 1.35rem;
+    border-radius: 999px; cursor: pointer;
+    box-shadow: 0 6px 24px rgba(224,99,58,0.45);
+    transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s;
+  }
+  .donate-toggle:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(224,99,58,0.6); }
+  .donate-toggle .donate-heart { font-size: 1.05rem; }
+  .donate-options {
+    display: flex; flex-direction: column; gap: 0.4rem;
+    opacity: 0; pointer-events: none;
+    transform: translateY(6px);
+    transition: opacity 0.16s, transform 0.16s;
+  }
+  .donate.open .donate-options { opacity: 1; pointer-events: auto; transform: translateY(0); }
+  .donate.open .donate-toggle { opacity: 0.55; }
+  .donate-opt {
+    display: flex; align-items: center; gap: 0.55rem;
+    font-size: 0.82rem; font-weight: 500; color: var(--text);
+    text-decoration: none;
+    background: var(--surface-2); border: 1px solid var(--border);
+    padding: 0.6rem 0.95rem; border-radius: 999px;
+    cursor: pointer; white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .donate-opt:hover { border-color: #2e3244; background: #1f2230; }
+  .donate-ic {
+    width: 20px; height: 20px; border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.68rem; font-weight: 700; flex-shrink: 0;
+  }
+  .ic-pp { background: #0070ba; color: #fff; }
+  .ic-bmc { background: #ffdd00; color: #000; }
+
+  /* footer note small */
+  .fnote { font-size: 0.72rem; color: var(--text-mute); text-align: center; margin-top: 0.8rem; line-height: 1.5; }
+
+  /* ===== EMPTY STATES ===== */
+  .empty {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; text-align: center;
+    padding: 4rem 1.5rem;
+    max-width: 360px; margin: 0 auto;
+  }
+  .empty-ic {
+    font-size: 2.8rem; margin-bottom: 1rem;
+    animation: float 4s ease-in-out infinite;
+  }
+  .empty-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.2rem; font-weight: 600;
+    margin-bottom: 0.4rem;
+  }
+  .empty-text { font-size: 0.86rem; color: var(--text-mute); line-height: 1.6; margin-bottom: 1.2rem; }
+
+  /* ===== CLOSED ARTIST BANNER ===== */
+  .closed-banner {
+    display: flex; align-items: center; gap: 0.8rem;
+    padding: 0.9rem 1.2rem;
+    background: rgba(224,85,85,0.07);
+    border: 1px solid rgba(224,85,85,0.18);
+    border-radius: 12px;
+    margin: 0 1.5rem 1.5rem;
+    max-width: 820px;
+  }
+  .closed-banner-ic { font-size: 1.2rem; flex-shrink: 0; }
+  .closed-banner-title { font-size: 0.88rem; font-weight: 600; color: var(--red); }
+  .closed-banner-text { font-size: 0.78rem; color: var(--text-mute); margin-top: 0.1rem; line-height: 1.4; }
+
+  /* ===== FIRST VISIT BUBBLE ===== */
+  .first-visit {
+    position: fixed; bottom: 5.5rem; left: 1.3rem;
+    z-index: 79;
+    width: 240px;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+    animation: fadeUp 0.4s ease 1.5s both;
+    overflow: hidden;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .first-visit.hidden { display: none; }
+  .fv-close {
+    position: absolute; top: 0.6rem; right: 0.6rem;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--surface); border: none;
+    color: var(--text-mute); font-size: 0.65rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: color 0.12s;
+  }
+  .fv-close:hover { color: var(--text); }
+  .fv-body { padding: 1rem 1rem 0.9rem; }
+  .fv-title {
+    font-family: 'Fraunces', serif;
+    font-size: 0.95rem; font-weight: 600;
+    margin-bottom: 0.35rem; padding-right: 1rem;
+  }
+  .fv-text {
+    font-size: 0.78rem; color: var(--text-mute);
+    line-height: 1.5; margin-bottom: 0.75rem;
+  }
+  .fv-btn {
+    font-size: 0.78rem; font-weight: 600;
+    color: var(--bg); background: var(--white);
+    border: none; border-radius: 999px;
+    padding: 0.42rem 0.9rem; cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .fv-btn:hover { opacity: 0.85; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+  }
+
+  /* ===== SPLASH SCREEN ===== */
+  #splash {
+    position: fixed; inset: 0; z-index: 9999;
+    background: #08090d;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+  #splash.hidden { display: none; }
+  #splash-logo {
+    opacity: 0;
+    animation: splashFadeIn 1s ease 0.3s forwards;
+  }
+  @keyframes splashFadeIn {
+    from { opacity: 0; transform: scale(0.92); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes splashFadeOut {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+  }
+
+  /* ===== FLOATING ANIMATIONS ===== */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 6px 24px rgba(224,99,58,0.45); }
+    50% { box-shadow: 0 10px 34px rgba(240,145,58,0.7); }
+  }
+  .donate-toggle {
+    animation: float 3s ease-in-out infinite, pulse-glow 3s ease-in-out infinite;
+  }
+
+  /* ===== GLOBAL OVERFLOW GUARD ===== */
+  html, body { max-width: 100%; overflow-x: hidden; }
+  img, svg, video { max-width: 100%; }
+
+  /* ===== MOBILE (≤ 640px) ===== */
+  @media (max-width: 640px) {
+    /* topbar — compact */
+    .topbar {
+      height: 54px;
+      gap: 0.6rem;
+      padding: 0 0.9rem;
+    }
+    .brand svg { height: 34px; }
+    .search { max-width: none; }
+    .search input { font-size: 0.82rem; padding: 0.5rem 0.9rem 0.5rem 2.2rem; }
+    /* hide text nav links on mobile, but keep "Cómo funciona" */
+    .nav-lnk { display: none; }
+    .nav-lnk-always { font-size: 0.76rem; padding: 0.42rem 0.6rem; }
+    .topbar-r { gap: 0.35rem; }
+    .btn-pill { padding: 0.42rem 0.8rem; font-size: 0.8rem; }
+
+    /* user dropdown — don't overflow screen */
+    .user-dropdown { width: 210px; }
+
+    /* filter bar */
+    .filter-bar-row { padding: 0.6rem 0.9rem; gap: 0.5rem; flex-wrap: wrap; }
+    .game-dropdown { flex: 1; }
+    .game-dropdown-btn { width: 100%; min-width: 0; }
+    .game-dropdown-menu { min-width: 220px; }
+    .active-filters { padding: 0 0.9rem 0.6rem; }
+
+    /* masonry — 2 columns, tighter */
+    .grid-wrap { padding: 1rem 0.9rem; }
+    .masonry { columns: 2; column-gap: 0.6rem; }
+    .pin { margin-bottom: 0.6rem; }
+
+    /* modal — full width stack */
+    .modal-bg { padding: 1rem 0.8rem; }
+    .modal { grid-template-columns: 1fr; border-radius: 14px; }
+    .modal-art { padding: 1.5rem; }
+    .modal-card-img { max-width: 180px; }
+    .modal-info { padding: 1.3rem 1.2rem; }
+
+    /* artist profile */
+    .profile-top { padding: 1.8rem 1rem 1rem; gap: 1rem; }
+    .profile-av-lg { width: 68px; height: 68px; font-size: 1.7rem; }
+    .profile-name { font-size: 1.35rem; }
+    .profile-info { min-width: 0; }
+    .profile-cta { width: 100%; }
+    .profile-cta .btn-pill { flex: 1; text-align: center; }
+    .profile-divider { padding: 0 1rem; }
+
+    /* dashboard */
+    .dash-wrap { padding: 1.8rem 1rem 3rem; }
+    .dash-stats { grid-template-columns: 1fr; gap: 0.6rem; }
+    .dash-head { gap: 0.6rem; }
+    .dash-title { font-size: 1.4rem; }
+    .request-card { flex-direction: column; }
+    .request-thumb { width: 100%; aspect-ratio: 16/7; }
+    .request-actions { flex-wrap: wrap; }
+
+    /* form builder — allow wrap */
+    .fb-field { flex-wrap: wrap; }
+    .fb-field-label { flex-basis: 100%; order: 3; }
+
+    /* auth / onboarding / forms — full width */
+    .auth-wrap, .ob-wrap { padding: 2.2rem 1rem 3rem; }
+
+    /* about page */
+    .about-hero { padding: 2.8rem 1rem 2.5rem; }
+    .about-section { padding: 2.2rem 1rem; }
+    .about-h1 { font-size: 1.8rem; }
+    .about-lead { font-size: 0.95rem; }
+
+    /* settings two-col grids stack */
+    .dash-wrap [style*="grid-template-columns:1fr 1fr"],
+    .dash-wrap [style*="grid-template-columns: 1fr 1fr"] {
+      grid-template-columns: 1fr !important;
+    }
+
+    /* filter popup full width */
+    .filter-popup { width: 100vw; }
+
+    /* donation widget — smaller */
+    .donate { bottom: 1rem; right: 1rem; }
+    .donate-toggle { font-size: 0.78rem; padding: 0.58rem 0.9rem; }
+  }
+
+  /* ===== SMALL TABLET (641–880px) ===== */
+  @media (min-width: 641px) and (max-width: 880px) {
+    .search { max-width: 320px; }
+    .masonry { columns: 3; }
+    .dash-stats { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- SPLASH SCREEN -->
+<div id="splash">
+  <svg id="splash-logo" viewBox="0 0 2048 2048" width="280" xmlns="http://www.w3.org/2000/svg" style="fill:#ffffff">
+    <!-- Generator: Adobe Illustrator 30.1.0, SVG Export Plug-In . SVG Version: 2.1.1 Build 136)  -->
+  <g>
+    <path d="M1496.09,1781.06l57.87.42c19.86.14,38.73-1.64,58.05-5.5,58.18-11.46,101.05-55.81,122.51-109.05l18.47,1.34-21.18,172.02-81.83.85-116.06-.53-225.07-.26c-.44-3.65-.52-7.14-.47-11.23,23.75-7.79,39.4-27.99,46.04-51.81,5.33-19.12,8.17-38.59,8.18-58.89l.24-422.2c.02-29.4-.84-62.09-11.96-88.76-7.03-16.86-21.98-27.27-40.37-27.77-.2-4.67-.17-8.64.13-12.96l71.43-18.82c101.35-26.7,253.25-34.46,357.55-17.59l5.17,38,14.35,114.18-18.39-2.18c-12.84-35.23-37.32-66.78-70.84-84.33-23.25-12.17-48.17-17.23-74.34-18.66-23.69-1.3-46.84-.52-70.34,3.21l-29.06,4.61-.02,248.02,62.56-3.5c15.41-.86,29.69-3.99,44.16-8.73,26.15-10.13,37.8-23.91,47-49.82l16.25,1.23.04,173.65-17.43.21c-5.5-20.62-18.44-36.24-37.5-45.62-31.64-15.97-79.73-10.92-115.09-8.17l-.04,288.66Z"/>
+    <path d="M1660.2,824.52c27.85-4.89,47.92-8.45,66.03-31.37,13.13-16.61,19.94-36.79,21.18-58.05,1.3-22.24-.14-49.77-11.32-69.42-10.83-19.03-31.19-30.82-53.03-30.84l-40.33-.04.15,362.01c0,12.26,2.74,23.72,5.31,34.94,3.56,15.55,14.67,26.13,28.93,32.24,1.36,2.35.56,7.01-1.21,9.05-22.65-2.68-44.58-6.54-67.29-7.37-19.03-.7-37.55-.96-56.49.23l-35.25,2.21c-.93-2.79-1.17-5.91-.55-8.88,28.68-11.22,32.23-40.35,32.22-68.16l-.05-204.61-.39-139.41c-.02-7.2-3.61-14.71-6.22-20.9-4.24-10.06-13.92-14.93-24.55-16.6-.51-3.19-.29-6.47.72-9.96l116.87-6.19c27.84-1.48,54.35-.99,82,.89,74,5.02,128.94,42.27,129.88,121.69.25,21.08-2.79,40.27-11.63,59.45-11.08,24.02-28.25,44.14-52.21,55.68l-19.15,9.23c9.05,23.37,19.44,45.23,29.94,68.01l24.24,52.56,20.62,41.46c29.16,58.61,70.46,128.05,128.43,161.72,3.53,2.05,8.25,3.02,12.13,4.89.94,2.25,1,5.98.57,9.18-66.33,2.3-129.77-24.43-175.66-72.26-21.11-22-38.53-46.1-53.33-72.95-23.03-41.79-41.49-85.06-59.15-129.45l-31.41-78.95Z"/>
+  </g>
+  <path d="M1449.69,1013.23c16.29-14.09,31.5-38.08,35.6-59.21,4.01-.32,7.55-.33,11.83,0l-3.86,62.21-3.75,54.43c-76.14,10.63-148.19,28.7-221.56,51.06l-45.16,13.76c-1.3-2.74-1.8-7.91.03-9.79,13.12-10.13,21.45-23.54,24.99-39.93,2.26-10.45,4.33-20.69,4.33-32l-.04-333.56-.95-14.21c-1.31-19.54-2.99-47.96-30.16-48.07-.07-3.67.02-6.96.41-10.47l84.73-17.22,99.94-15.99,71.47-9.96,5.28,62.64c.98,11.65,1.9,22.09,1.64,33.81l-10,.77c-8.18-20.82-26.12-35.69-48.88-37.99-27.63-2.8-54.76,2.01-82.25,7.9l.6,72.63,1.17,84.85c18.64-4.35,36.26-8.02,54.22-13.45,14.32-4.34,25.19-14.52,28.86-28.91,3.83-.52,6.98-.69,10.54-.57l.62,99.49-11.13.14c-2.28-7.56-6.04-13.54-13.29-16.48-10.34-3.39-21.05-3.34-31.78-.96l-39.47,8.78.14,130.97,1.26,43.61,56.28-14.07c17.89-4.47,33.72-12.52,48.34-24.2Z"/>
+  <path d="M638.22,1840.35c-2.59-2.64-1.83-7.3-.53-10.51,22.31-5.73,36.88-24.24,41.26-45.92,2.29-11.32,4.06-22.12,4.04-34.13l-.3-305.13c0-10.11-3.01-20.2-6.56-28.74-6.65-16.03-20.94-24.69-38.34-24.82-.98-3.21-1.02-7.03-.42-10.52l32.38-9.97,178.65-53.92,1.23,11.38c-28.67,16.72-41.07,47.51-42.85,79.86-.45,8.24-1.4,15.8-1.39,24.36l.34,323.49c.01,14.25,2.61,27.6,7.41,40.07,6.68,17.36,19.97,29.14,37.75,33.97.56,3.7.61,6.79-.02,10.51l-212.65.02Z"/>
+  <g>
+    <path d="M673.66,705.85c5.66,15.85,19.19,24,35.51,23.93.94,2.68,1.3,8.38-1.28,10.16l-63.06,18.92-96.75,27.51c-1.19-3.68-1.49-6.81-1.21-10.49,13.85-7.45,24.49-19.64,29.01-35.01,2.24-7.61,5.7-16,5.7-24.48l.09-470.81-37.68,1.44c-17.44.67-34.41,3.69-50.63,9.24-19.05,6.51-33.73,20.05-39.45,39.13-4.45.36-8.01.34-12.16-.38l10.51-95.6h152.61c4.28-.01,8.02-.54,12.27-.81l119.83.35,60.28.77,10.72,95.57c-4.8.51-8.54.4-12.75-.31-5.76-19.93-22.86-33.18-41.84-39.25-20.19-6.45-40.82-8.98-61.9-9.34l-25.11-.44.04,419.86c0,13.98,2.65,27.06,7.29,40.03Z"/>
+    <g>
+      <path d="M764.33,723.78c-.75-3.19-1.04-7.17-.69-10.14,4.14-2.89,8.64-5.44,11.45-9.42,10.17-14.38,14.39-30.61,14.38-48.39l-.2-268.7c0-7.09-3.61-13.69-5.3-20.07-3.23-12.16-13.1-14.78-24.08-17.26l.17-8.72,50.16-7.85c28.4-4.45,55.39-9.95,84.11-16.08.35,2.8.39,6.57.13,9.56-5.72,3.74-10.24,8.13-13.9,13.82-6.74,10.07-9.7,21.12-10.77,33.53l.13,103.02,95.62-30.69v-98.26c-.66-6.05-2.07-11.32-3.94-16.81-3.55-8.51-10.69-13.49-20.46-13.26l-.04-9.51,75-15.42,54.25-11.83.16,10.22c-17.74,7.57-26.16,31.87-26.15,49.61l.12,243.65c0,7.31,2.46,14.58,4.85,20.7,7.47,19.13,21.36,8.13,22.17,19.05.13,1.77-1,4.93-3.39,5.65l-127.38,38.22c-1.09-3.48-1.17-6.7-.89-10.4,10.05-4.85,16.19-13.51,19.56-23.67,3.02-7.64,5.46-14.96,6.29-23.38l-.14-119.95-95.58,31.33v117.56c-.02,8.83,2.1,16.67,5.99,24.15,4.75,6.72,11.34,9.69,20.41,9.28l-.39,10.43-41.92,12.38-89.71,27.68Z"/>
+      <path d="M1202.42,551.37l41.63-8.12c15.41-3.01,29.87-7.2,42.7-16.53,15.78-11.47,26.79-27.01,31.54-46.08,3.45-.45,6.24-.59,10.1-.48l-7.12,89.99-28.99,5.26-64.19,12.87c-30.76,6.17-60.13,14.45-90.37,22.41l-37.99,10-.51-10.1c25.97-11.3,25.64-53.22,25.62-76.77l-.18-209.67c0-10.03-2.91-19.48-6.86-27.95-3.49-7.49-10.8-10.16-19.16-8.7-.56-3.64-.6-7.21.27-10.92l210.25-28.44,7.55,76.42-9.88.94c-2.38-6.33-5.34-11.02-9.85-15.5-20.47-20.33-50.18-16.32-76.83-11.86l-17.58,2.94v101.87s31.67-5.65,31.67-5.65c12.15-2.17,26.36-10.35,29.83-23.46,2.76-.8,6.46-.89,10.1-.39l.02,76.46c-2.05,1.77-8.11,2.88-9.55.88-2.39-3.3-3.94-6.17-6.04-9.65-12.24-9.79-39.32-.24-56.14,1.88l-.06,108.37Z"/>
+    </g>
+  </g>
+  <g>
+    <path d="M1104.34,1556.92l-46.71,8.61.3,169.32c.03,17.01,2.38,33.05,7.34,48.67,7.03,22.14,23.13,38.83,45.23,45.74l.17,11.01-57.32.35-102.35.04-72.05-.35.03-10.47c21.77-6.95,37.95-22.95,44.67-45.12,5.17-17.09,7.37-34.45,7.37-52.91l.13-337.58c.01-33.28-7.66-77.7-50.43-75.76-.9-4.04-.95-7.73-.35-12.42l68.33-22.5,141.34-46.65,182.34-59.06,17.72,139.63c-5.37,1.91-10.94,3.24-16.96,4.36-18.12-37.08-46.69-54.05-88.19-53.05-43.22,1.44-86.86,19.6-127.31,33.93l.02,209.63c25.97-4.45,50.5-9.9,74.91-17.67,18.7-5.96,34.6-16.19,47.04-31.03,6.31-8.62,10.87-17.53,12.66-28.17l15.75-2.32-.14,9.99-.05,150.45-14.11,2.08-4.49-10.05c-7.14-16-21.25-26.26-38.57-29.51-15.29-2.66-30.39-2.13-46.31.8Z"/>
+    <path d="M1127.49,1166.95l-158.69,52.89c-7.31-11.78,6.77-11.9,15.8-30.11s11.58-38.07,11.58-58.92l-.04-372.57c-37.4,13.69-56.32,18.8-82.37,49.5-9.33,11.57-15.06,24.08-19.64,38.31-3.79.94-7.72,1.47-11.1,1.32l5.19-103.54,305.5-90.17,7.77,103.36-9.99,1.29c-5.41-19.46-26.08-34.96-45.63-36.16-23.51-1.45-34.08,1.88-57.14,8.45l.02,371.18c0,10.86,2.74,20.58,4.8,30.57,3.24,15.69,16.15,25.94,32.59,25.05,1.72,2.23,1.98,6.09,1.35,9.56Z"/>
+  </g>
+  <g>
+    <path d="M944.52,1147.27l-4.44,60.74c-.57,7.82-.69,14.88-2.47,22.61l-146.44,45.6-131.74,38.91-46.95,13.48-139.54,38.19c-2.85-4.65-1.05-8.53,2.98-11.82,10.93-8.92,20.23-21.15,22.36-35.53,3.96-26.73-2.15-48.64-9.06-74.7l-38.67-145.76c-27.15,22.92-54.62,43.06-84.47,60.82-18.61,11.08-37.25,19.81-57.63,26.74l-26.36,8.76-19.47,90.22-11.57,55.59c-1.45,6.98-1.05,14.94-.06,21.89,3.5,24.46,20.86,38.57,44.28,42.32.38,3.02.52,5.48.31,8.39l-201.5,47.6c-1.44-2.62-1.84-5.7-1.56-8.93,33.18-19.73,56.33-64.19,67.82-100.08,10.26-32.06,18.21-63.95,26.09-96.94l54.42-227.73,61.96-261.4,15.95-70.39c5.61-24.78,1.41-61.9-27.71-68.9-.27-3.69-.27-6.97.09-10.53l149-.04,97.31,361.37c23.52-8.36,47.32-10.77,70.45.13,16.34,7.7,26.55,22.39,30.68,39.79,2.51,10.59,2.91,21.17-1.72,31.49-.62,1.38-4.81,1.74-6.07.69-1.55-13.69-7.9-26.94-20.85-32.97-19.5-9.09-42.05-5.84-60.05,6.46l52.75,190.96c3.48,12.61,8.12,23.64,12.26,35.9,8.6,25.51,27.71,46.2,53.44,55.96,22.86-22.08,27.01-36.55,30.18-68.34v-366.58c0-11.09-2.54-21.64-6.25-31.36-4.59-12.03-15.59-18.17-28.33-18.66-.66-3.24-.56-6.59.37-9.87l162.17-48.23c1.08,2.21.91,6.82-.12,9.29-23.03,13.51-31.4,36.43-34.05,62.03-.52,5.01-1.13,9.31-1.13,14.86l.03,361.47c0,6.07.63,10.54,1.89,16.06,57.17-15.62,105.61-28.43,133.08-85.79,4.34-9.05,7.69-17.87,9.92-27.8,2.98-1.61,6.9-1.75,10.67-.84l-2.24,34.89ZM405.84,1063.89l29.52-23.71-44.46-174.16-20.52-80.73-16.34,73.75-17.05,77.06-30.54,143.14-10.6,48.84c36.24-12.02,80.93-40.86,109.98-64.18Z"/>
+    <path d="M617.76,1706.06l-15.95,134.3-317.06-.02-.25-8.86c6.16-2.94,11.63-5.34,17.42-8.66,18.84-10.8,21.63-42.96,21.62-62.57l-.14-229.07c0-12.6-3.16-24.95-9.42-35.18s-17.41-13.3-28.61-15.34c-.64-3.12-.7-6-.33-9.78l40.48-9.31,140.66-33.63c.95,2.93,1.28,6.58.88,10.05-27.78,14.73-33.5,38.99-35.37,68.03l-.98,15.21v272.97s40.27-.02,40.27-.02c12.26,0,23.79-1.43,35.81-3.35,46.94-8.97,80.18-40.32,96.43-84.75,4.72-.55,8.86-.56,14.55-.03Z"/>
+  </g>
+  </svg>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="brand" onclick="go('home')" title="The Alter Life">
+      <svg viewBox="0 0 2048 2048" height="48" xmlns="http://www.w3.org/2000/svg" style="fill:var(--white);flex-shrink:0">
+        <!-- Generator: Adobe Illustrator 30.1.0, SVG Export Plug-In . SVG Version: 2.1.1 Build 136)  -->
+  <g>
+    <path d="M1496.09,1781.06l57.87.42c19.86.14,38.73-1.64,58.05-5.5,58.18-11.46,101.05-55.81,122.51-109.05l18.47,1.34-21.18,172.02-81.83.85-116.06-.53-225.07-.26c-.44-3.65-.52-7.14-.47-11.23,23.75-7.79,39.4-27.99,46.04-51.81,5.33-19.12,8.17-38.59,8.18-58.89l.24-422.2c.02-29.4-.84-62.09-11.96-88.76-7.03-16.86-21.98-27.27-40.37-27.77-.2-4.67-.17-8.64.13-12.96l71.43-18.82c101.35-26.7,253.25-34.46,357.55-17.59l5.17,38,14.35,114.18-18.39-2.18c-12.84-35.23-37.32-66.78-70.84-84.33-23.25-12.17-48.17-17.23-74.34-18.66-23.69-1.3-46.84-.52-70.34,3.21l-29.06,4.61-.02,248.02,62.56-3.5c15.41-.86,29.69-3.99,44.16-8.73,26.15-10.13,37.8-23.91,47-49.82l16.25,1.23.04,173.65-17.43.21c-5.5-20.62-18.44-36.24-37.5-45.62-31.64-15.97-79.73-10.92-115.09-8.17l-.04,288.66Z"/>
+    <path d="M1660.2,824.52c27.85-4.89,47.92-8.45,66.03-31.37,13.13-16.61,19.94-36.79,21.18-58.05,1.3-22.24-.14-49.77-11.32-69.42-10.83-19.03-31.19-30.82-53.03-30.84l-40.33-.04.15,362.01c0,12.26,2.74,23.72,5.31,34.94,3.56,15.55,14.67,26.13,28.93,32.24,1.36,2.35.56,7.01-1.21,9.05-22.65-2.68-44.58-6.54-67.29-7.37-19.03-.7-37.55-.96-56.49.23l-35.25,2.21c-.93-2.79-1.17-5.91-.55-8.88,28.68-11.22,32.23-40.35,32.22-68.16l-.05-204.61-.39-139.41c-.02-7.2-3.61-14.71-6.22-20.9-4.24-10.06-13.92-14.93-24.55-16.6-.51-3.19-.29-6.47.72-9.96l116.87-6.19c27.84-1.48,54.35-.99,82,.89,74,5.02,128.94,42.27,129.88,121.69.25,21.08-2.79,40.27-11.63,59.45-11.08,24.02-28.25,44.14-52.21,55.68l-19.15,9.23c9.05,23.37,19.44,45.23,29.94,68.01l24.24,52.56,20.62,41.46c29.16,58.61,70.46,128.05,128.43,161.72,3.53,2.05,8.25,3.02,12.13,4.89.94,2.25,1,5.98.57,9.18-66.33,2.3-129.77-24.43-175.66-72.26-21.11-22-38.53-46.1-53.33-72.95-23.03-41.79-41.49-85.06-59.15-129.45l-31.41-78.95Z"/>
+  </g>
+  <path d="M1449.69,1013.23c16.29-14.09,31.5-38.08,35.6-59.21,4.01-.32,7.55-.33,11.83,0l-3.86,62.21-3.75,54.43c-76.14,10.63-148.19,28.7-221.56,51.06l-45.16,13.76c-1.3-2.74-1.8-7.91.03-9.79,13.12-10.13,21.45-23.54,24.99-39.93,2.26-10.45,4.33-20.69,4.33-32l-.04-333.56-.95-14.21c-1.31-19.54-2.99-47.96-30.16-48.07-.07-3.67.02-6.96.41-10.47l84.73-17.22,99.94-15.99,71.47-9.96,5.28,62.64c.98,11.65,1.9,22.09,1.64,33.81l-10,.77c-8.18-20.82-26.12-35.69-48.88-37.99-27.63-2.8-54.76,2.01-82.25,7.9l.6,72.63,1.17,84.85c18.64-4.35,36.26-8.02,54.22-13.45,14.32-4.34,25.19-14.52,28.86-28.91,3.83-.52,6.98-.69,10.54-.57l.62,99.49-11.13.14c-2.28-7.56-6.04-13.54-13.29-16.48-10.34-3.39-21.05-3.34-31.78-.96l-39.47,8.78.14,130.97,1.26,43.61,56.28-14.07c17.89-4.47,33.72-12.52,48.34-24.2Z"/>
+  <path d="M638.22,1840.35c-2.59-2.64-1.83-7.3-.53-10.51,22.31-5.73,36.88-24.24,41.26-45.92,2.29-11.32,4.06-22.12,4.04-34.13l-.3-305.13c0-10.11-3.01-20.2-6.56-28.74-6.65-16.03-20.94-24.69-38.34-24.82-.98-3.21-1.02-7.03-.42-10.52l32.38-9.97,178.65-53.92,1.23,11.38c-28.67,16.72-41.07,47.51-42.85,79.86-.45,8.24-1.4,15.8-1.39,24.36l.34,323.49c.01,14.25,2.61,27.6,7.41,40.07,6.68,17.36,19.97,29.14,37.75,33.97.56,3.7.61,6.79-.02,10.51l-212.65.02Z"/>
+  <g>
+    <path d="M673.66,705.85c5.66,15.85,19.19,24,35.51,23.93.94,2.68,1.3,8.38-1.28,10.16l-63.06,18.92-96.75,27.51c-1.19-3.68-1.49-6.81-1.21-10.49,13.85-7.45,24.49-19.64,29.01-35.01,2.24-7.61,5.7-16,5.7-24.48l.09-470.81-37.68,1.44c-17.44.67-34.41,3.69-50.63,9.24-19.05,6.51-33.73,20.05-39.45,39.13-4.45.36-8.01.34-12.16-.38l10.51-95.6h152.61c4.28-.01,8.02-.54,12.27-.81l119.83.35,60.28.77,10.72,95.57c-4.8.51-8.54.4-12.75-.31-5.76-19.93-22.86-33.18-41.84-39.25-20.19-6.45-40.82-8.98-61.9-9.34l-25.11-.44.04,419.86c0,13.98,2.65,27.06,7.29,40.03Z"/>
+    <g>
+      <path d="M764.33,723.78c-.75-3.19-1.04-7.17-.69-10.14,4.14-2.89,8.64-5.44,11.45-9.42,10.17-14.38,14.39-30.61,14.38-48.39l-.2-268.7c0-7.09-3.61-13.69-5.3-20.07-3.23-12.16-13.1-14.78-24.08-17.26l.17-8.72,50.16-7.85c28.4-4.45,55.39-9.95,84.11-16.08.35,2.8.39,6.57.13,9.56-5.72,3.74-10.24,8.13-13.9,13.82-6.74,10.07-9.7,21.12-10.77,33.53l.13,103.02,95.62-30.69v-98.26c-.66-6.05-2.07-11.32-3.94-16.81-3.55-8.51-10.69-13.49-20.46-13.26l-.04-9.51,75-15.42,54.25-11.83.16,10.22c-17.74,7.57-26.16,31.87-26.15,49.61l.12,243.65c0,7.31,2.46,14.58,4.85,20.7,7.47,19.13,21.36,8.13,22.17,19.05.13,1.77-1,4.93-3.39,5.65l-127.38,38.22c-1.09-3.48-1.17-6.7-.89-10.4,10.05-4.85,16.19-13.51,19.56-23.67,3.02-7.64,5.46-14.96,6.29-23.38l-.14-119.95-95.58,31.33v117.56c-.02,8.83,2.1,16.67,5.99,24.15,4.75,6.72,11.34,9.69,20.41,9.28l-.39,10.43-41.92,12.38-89.71,27.68Z"/>
+      <path d="M1202.42,551.37l41.63-8.12c15.41-3.01,29.87-7.2,42.7-16.53,15.78-11.47,26.79-27.01,31.54-46.08,3.45-.45,6.24-.59,10.1-.48l-7.12,89.99-28.99,5.26-64.19,12.87c-30.76,6.17-60.13,14.45-90.37,22.41l-37.99,10-.51-10.1c25.97-11.3,25.64-53.22,25.62-76.77l-.18-209.67c0-10.03-2.91-19.48-6.86-27.95-3.49-7.49-10.8-10.16-19.16-8.7-.56-3.64-.6-7.21.27-10.92l210.25-28.44,7.55,76.42-9.88.94c-2.38-6.33-5.34-11.02-9.85-15.5-20.47-20.33-50.18-16.32-76.83-11.86l-17.58,2.94v101.87s31.67-5.65,31.67-5.65c12.15-2.17,26.36-10.35,29.83-23.46,2.76-.8,6.46-.89,10.1-.39l.02,76.46c-2.05,1.77-8.11,2.88-9.55.88-2.39-3.3-3.94-6.17-6.04-9.65-12.24-9.79-39.32-.24-56.14,1.88l-.06,108.37Z"/>
+    </g>
+  </g>
+  <g>
+    <path d="M1104.34,1556.92l-46.71,8.61.3,169.32c.03,17.01,2.38,33.05,7.34,48.67,7.03,22.14,23.13,38.83,45.23,45.74l.17,11.01-57.32.35-102.35.04-72.05-.35.03-10.47c21.77-6.95,37.95-22.95,44.67-45.12,5.17-17.09,7.37-34.45,7.37-52.91l.13-337.58c.01-33.28-7.66-77.7-50.43-75.76-.9-4.04-.95-7.73-.35-12.42l68.33-22.5,141.34-46.65,182.34-59.06,17.72,139.63c-5.37,1.91-10.94,3.24-16.96,4.36-18.12-37.08-46.69-54.05-88.19-53.05-43.22,1.44-86.86,19.6-127.31,33.93l.02,209.63c25.97-4.45,50.5-9.9,74.91-17.67,18.7-5.96,34.6-16.19,47.04-31.03,6.31-8.62,10.87-17.53,12.66-28.17l15.75-2.32-.14,9.99-.05,150.45-14.11,2.08-4.49-10.05c-7.14-16-21.25-26.26-38.57-29.51-15.29-2.66-30.39-2.13-46.31.8Z"/>
+    <path d="M1127.49,1166.95l-158.69,52.89c-7.31-11.78,6.77-11.9,15.8-30.11s11.58-38.07,11.58-58.92l-.04-372.57c-37.4,13.69-56.32,18.8-82.37,49.5-9.33,11.57-15.06,24.08-19.64,38.31-3.79.94-7.72,1.47-11.1,1.32l5.19-103.54,305.5-90.17,7.77,103.36-9.99,1.29c-5.41-19.46-26.08-34.96-45.63-36.16-23.51-1.45-34.08,1.88-57.14,8.45l.02,371.18c0,10.86,2.74,20.58,4.8,30.57,3.24,15.69,16.15,25.94,32.59,25.05,1.72,2.23,1.98,6.09,1.35,9.56Z"/>
+  </g>
+  <g>
+    <path d="M944.52,1147.27l-4.44,60.74c-.57,7.82-.69,14.88-2.47,22.61l-146.44,45.6-131.74,38.91-46.95,13.48-139.54,38.19c-2.85-4.65-1.05-8.53,2.98-11.82,10.93-8.92,20.23-21.15,22.36-35.53,3.96-26.73-2.15-48.64-9.06-74.7l-38.67-145.76c-27.15,22.92-54.62,43.06-84.47,60.82-18.61,11.08-37.25,19.81-57.63,26.74l-26.36,8.76-19.47,90.22-11.57,55.59c-1.45,6.98-1.05,14.94-.06,21.89,3.5,24.46,20.86,38.57,44.28,42.32.38,3.02.52,5.48.31,8.39l-201.5,47.6c-1.44-2.62-1.84-5.7-1.56-8.93,33.18-19.73,56.33-64.19,67.82-100.08,10.26-32.06,18.21-63.95,26.09-96.94l54.42-227.73,61.96-261.4,15.95-70.39c5.61-24.78,1.41-61.9-27.71-68.9-.27-3.69-.27-6.97.09-10.53l149-.04,97.31,361.37c23.52-8.36,47.32-10.77,70.45.13,16.34,7.7,26.55,22.39,30.68,39.79,2.51,10.59,2.91,21.17-1.72,31.49-.62,1.38-4.81,1.74-6.07.69-1.55-13.69-7.9-26.94-20.85-32.97-19.5-9.09-42.05-5.84-60.05,6.46l52.75,190.96c3.48,12.61,8.12,23.64,12.26,35.9,8.6,25.51,27.71,46.2,53.44,55.96,22.86-22.08,27.01-36.55,30.18-68.34v-366.58c0-11.09-2.54-21.64-6.25-31.36-4.59-12.03-15.59-18.17-28.33-18.66-.66-3.24-.56-6.59.37-9.87l162.17-48.23c1.08,2.21.91,6.82-.12,9.29-23.03,13.51-31.4,36.43-34.05,62.03-.52,5.01-1.13,9.31-1.13,14.86l.03,361.47c0,6.07.63,10.54,1.89,16.06,57.17-15.62,105.61-28.43,133.08-85.79,4.34-9.05,7.69-17.87,9.92-27.8,2.98-1.61,6.9-1.75,10.67-.84l-2.24,34.89ZM405.84,1063.89l29.52-23.71-44.46-174.16-20.52-80.73-16.34,73.75-17.05,77.06-30.54,143.14-10.6,48.84c36.24-12.02,80.93-40.86,109.98-64.18Z"/>
+    <path d="M617.76,1706.06l-15.95,134.3-317.06-.02-.25-8.86c6.16-2.94,11.63-5.34,17.42-8.66,18.84-10.8,21.63-42.96,21.62-62.57l-.14-229.07c0-12.6-3.16-24.95-9.42-35.18s-17.41-13.3-28.61-15.34c-.64-3.12-.7-6-.33-9.78l40.48-9.31,140.66-33.63c.95,2.93,1.28,6.58.88,10.05-27.78,14.73-33.5,38.99-35.37,68.03l-.98,15.21v272.97s40.27-.02,40.27-.02c12.26,0,23.79-1.43,35.81-3.35,46.94-8.97,80.18-40.32,96.43-84.75,4.72-.55,8.86-.56,14.55-.03Z"/>
+  </g>
+      </svg>
+    </div>
+  <div class="search">
+    <svg class="search-ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+    <input type="text" placeholder="Buscar cartas, artistas, estilos...">
+  </div>
+  <div class="topbar-r">
+    <span class="nav-lnk active" id="nl-home" onclick="go('home')" style="display:none">Explorar</span>
+    <button class="btn-pill btn-ghost" onclick="go('auth')" id="btn-entrar">Entrar</button>
+    <div class="user-menu" id="user-menu" style="display:none">
+      <div class="av" onclick="toggleUserMenu()">🎨</div>
+      <div class="user-dropdown" id="user-dropdown">
+        <div class="user-dd-head">
+          <div class="av" style="width:38px;height:38px">🎨</div>
+          <div>
+            <div class="user-dd-name">Tu cuenta</div>
+            <div class="user-dd-email">tucorreo@email.com</div>
+          </div>
+        </div>
+        <div class="user-dd-item" id="udd-dash" onclick="closeUserMenu();go('dash')" style="display:none">
+          <span>◈</span> Mi panel de artista
+        </div>
+        <div class="user-dd-item" onclick="closeUserMenu();go('saved')">
+          <span>♥</span> Obras guardadas
+        </div>
+        <div class="user-dd-item" onclick="closeUserMenu();go('settings')">
+          <span>⚙</span> Ajustes
+        </div>
+        <div class="user-dd-sep"></div>
+        <div class="user-dd-item" onclick="logout()">
+          <span>→</span> Cerrar sesión
+        </div>
+        <div class="user-dd-sep"></div>
+        <div class="user-dd-footer">
+          <span onclick="closeUserMenu();go('about')">Cómo funciona</span>
+          <span>·</span>
+          <span onclick="closeUserMenu();go('about')">Privacidad</span>
+          <span>·</span>
+          <span onclick="closeUserMenu();go('about')">Contacto</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== HOME ===== -->
+<div class="page active" id="page-home">
+  <div class="filter-bar">
+    <div class="filter-bar-row">
+
+      <!-- game dropdown -->
+      <div class="game-dropdown" id="game-dd">
+        <button class="game-dropdown-btn" id="game-dd-btn" onclick="toggleGameDD()">
+          <span class="game-logo gl-all" id="game-dd-logo">✦</span>
+          <span id="game-dd-label">Todos los juegos</span>
+          <span class="game-dropdown-arrow">▾</span>
+        </button>
+        <div class="game-dropdown-menu" id="game-dd-menu">
+          <div class="game-option selected" data-game="all" data-label="Todos los juegos" data-logo="gl-all" data-ic="✦" onclick="selectGame(this)">
+            <span class="game-logo gl-all">✦</span> Todos
+            <span class="game-check">✓</span>
+          </div>
+          <div class="game-option" data-game="magic" data-label="Magic" data-logo="gl-magic" data-ic="M" onclick="selectGame(this)">
+            <span class="game-logo gl-magic">M</span> Magic: The Gathering
+            <span class="game-check">✓</span>
+          </div>
+          <div class="game-option" data-game="pokemon" data-label="Pokémon TCG" data-logo="gl-pokemon" data-ic="P" onclick="selectGame(this)">
+            <span class="game-logo gl-pokemon">P</span> Pokémon TCG
+            <span class="game-check">✓</span>
+          </div>
+          <div class="game-option" data-game="lorcana" data-label="Lorcana" data-logo="gl-lorcana" data-ic="L" onclick="selectGame(this)">
+            <span class="game-logo gl-lorcana">L</span> Disney Lorcana
+            <span class="game-check">✓</span>
+          </div>
+          <div class="game-option" data-game="onepiece" data-label="One Piece" data-logo="gl-onepiece" data-ic="OP" onclick="selectGame(this)">
+            <span class="game-logo gl-onepiece">OP</span> One Piece TCG
+            <span class="game-check">✓</span>
+          </div>
+          <div class="game-option" data-game="yugioh" data-label="Yu-Gi-Oh!" data-logo="gl-yugioh" data-ic="YG" onclick="selectGame(this)">
+            <span class="game-logo gl-yugioh">YG</span> Yu-Gi-Oh!
+            <span class="game-check">✓</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- filter button — right next to dropdown -->
+      <button class="filter-btn" id="filter-btn" onclick="openFilters()">
+        <span class="filter-btn-ic">
+          <span></span><span></span><span></span>
+        </span>
+        Filtros
+        <span class="filter-count" id="filter-count">0</span>
+      </button>
+
+    </div>
+
+    <!-- active filter tags — hidden until filters applied -->
+    <div class="active-filters" id="active-filters"></div>
+  </div>
+
+  <div class="grid-wrap">
+    <!-- no results empty state -->
+    <div id="wall-empty" style="display:none">
+      <div class="empty">
+        <div class="empty-ic">🔎</div>
+        <div class="empty-title">Sin resultados</div>
+        <div class="empty-text">No hay obras con esos filtros. Prueba a cambiar la combinación o quita algún filtro.</div>
+        <button class="btn-pill btn-ghost" onclick="clearFilters();renderTags()">Limpiar filtros</button>
+      </div>
+    </div>
+    <div class="masonry" id="home-wall"></div>
+  </div>
+</div>
+
+<!-- FILTER POPUP -->
+<div class="filter-popup-bg" id="filter-bg" onclick="if(event.target===this)closeFilters()">
+  <div class="filter-popup">
+    <div class="popup-head">
+      <div class="popup-title">Filtros</div>
+      <button class="popup-close" onclick="closeFilters()">✕</button>
+    </div>
+    <div class="popup-body">
+      <div class="popup-section">
+        <div class="popup-section-title">Tipo de obra</div>
+        <div class="popup-options">
+          <button class="popup-opt" onclick="this.classList.toggle('on')">Token</button>
+          <button class="popup-opt" onclick="this.classList.toggle('on')">Full art</button>
+          <button class="popup-opt" onclick="this.classList.toggle('on')">Alter básico</button>
+          <button class="popup-opt" onclick="this.classList.toggle('on')">Basic land</button>
+        </div>
+      </div>
+      <div class="popup-section">
+        <div class="popup-section-title">Técnica</div>
+        <div class="popup-options">
+          <button class="popup-opt" onclick="this.classList.toggle('on')">Acuarela</button>
+          <button class="popup-opt" onclick="this.classList.toggle('on')">Acrílico</button>
+          <button class="popup-opt" onclick="this.classList.toggle('on')">Digital</button>
+          <button class="popup-opt" onclick="this.classList.toggle('on')">Mixta</button>
+        </div>
+      </div>
+      <div class="popup-section">
+        <div class="popup-section-title">Estado</div>
+        <div class="popup-options">
+          <button class="popup-opt" onclick="this.classList.toggle('on')">En venta</button>
+          <button class="popup-opt" onclick="this.classList.toggle('on')">Vendida</button>
+          <button class="popup-opt" onclick="this.classList.toggle('on')">Portfolio</button>
+        </div>
+      </div>
+      <div class="popup-section">
+        <div class="popup-section-title">Ordenar por</div>
+        <div class="popup-options" id="order-opts">
+          <button class="popup-opt on" onclick="selectOrder(this)">Reciente</button>
+          <button class="popup-opt" onclick="selectOrder(this)">Top valorados</button>
+          <button class="popup-opt" onclick="selectOrder(this)">Precio: menor</button>
+          <button class="popup-opt" onclick="selectOrder(this)">Precio: mayor</button>
+        </div>
+      </div>
+    </div>
+    <div class="popup-foot">
+      <button class="btn-block secondary" onclick="clearFilters()">Descartar todo</button>
+      <button class="btn-block primary" onclick="applyFilters()">Aplicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ARTIST PROFILE ===== -->
+<div class="page" id="page-profile">
+  <div class="profile-top">
+    <div class="profile-av-lg">🎨</div>
+    <div class="profile-info">
+      <div class="profile-name">Seraphic Arts</div>
+      <div class="avail-badge avail-open" id="profile-avail-badge" onclick="toggleProfileAvail()" style="cursor:pointer" title="Demo: cambiar estado">
+        <span class="avail-dot"></span>
+        <span id="profile-avail-label">Acepta encargos</span>
+      </div>
+      <div class="profile-bio">Alters en acuarela y digital. Magic & Pokémon. Cada carta, una pieza única pintada a mano desde Madrid.</div>
+      <div class="profile-tags">
+        <span class="profile-tag">Magic</span>
+        <span class="profile-tag">Pokémon</span>
+        <span class="profile-tag">Acuarela</span>
+        <span class="profile-tag">Digital</span>
+      </div>
+      <div class="profile-meta">
+        <span><b>248</b> obras</span>
+        <span><b>4.9 ★</b> valoración</span>
+        <span><b>312</b> encargos</span>
+      </div>
+    </div>
+    <div class="profile-cta">
+      <button class="btn-pill btn-light" id="profile-encargo-btn" onclick="go('form')">Solicitar encargo</button>
+      <div class="social-links">
+        <a class="social-link" href="#" target="_blank" title="Instagram">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 3.25.15 4.77 1.69 4.92 4.92.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.15 3.23-1.66 4.77-4.92 4.92-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-3.26-.15-4.77-1.7-4.92-4.92-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85C2.38 3.92 3.9 2.38 7.15 2.23 8.42 2.17 8.8 2.16 12 2.16zm0 3.68a6.16 6.16 0 100 12.32 6.16 6.16 0 000-12.32zM12 16a4 4 0 110-8 4 4 0 010 8zm6.4-10.45a1.44 1.44 0 100 2.88 1.44 1.44 0 000-2.88z"/></svg>
+        </a>
+        <a class="social-link" href="#" target="_blank" title="X / Twitter">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.41l-5.8-7.58-6.64 7.58H.46l8.6-9.83L0 1.15h7.6l5.24 6.93 6.06-6.93zm-1.29 19.5h2.04L6.48 3.24H4.3L17.61 20.65z"/></svg>
+        </a>
+        <a class="social-link" href="#" target="_blank" title="TikTok">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M16.6 5.82a4.28 4.28 0 01-1.06-2.82h-3.3v13.2a2.59 2.59 0 01-2.58 2.5 2.59 2.59 0 01-2.58-2.59A2.59 2.59 0 019.9 13.7v-3.36a5.89 5.89 0 105.06 5.83V9.01a7.57 7.57 0 004.4 1.41V7.1a4.28 4.28 0 01-2.76-1.28z"/></svg>
+        </a>
+        <a class="social-link" href="#" target="_blank" title="Sitio web / tienda">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- closed banner — hidden when open -->
+  <div class="closed-banner" id="profile-closed-banner" style="display:none">
+    <div class="closed-banner-ic">🔒</div>
+    <div>
+      <div class="closed-banner-title">Este artista no acepta encargos ahora mismo</div>
+      <div class="closed-banner-text">Puedes guardar su perfil y volver más adelante. Sigue subiendo obras a su portfolio.</div>
+    </div>
+  </div>
+
+  <div class="profile-divider"></div>
+
+  <!-- empty portfolio state -->
+  <div id="profile-wall-empty" style="display:none">
+    <div class="empty">
+      <div class="empty-ic">🖌️</div>
+      <div class="empty-title">Todavía no hay obras</div>
+      <div class="empty-text">Este artista aún no ha subido ninguna obra. Vuelve pronto.</div>
+      <button class="btn-pill btn-ghost" onclick="go('home')">Explorar otros artistas</button>
+    </div>
+  </div>
+
+  <div class="grid-wrap">
+    <div class="masonry" id="profile-wall"></div>
+  </div>
+
+  <div class="profile-divider"></div>
+
+  <!-- reviews section -->
+  <div class="reviews-wrap">
+    <div class="reviews-head">
+      <div>
+        <div class="reviews-title">Valoraciones</div>
+        <div class="reviews-sub"><b>4.9</b> de 5 · 312 encargos completados</div>
+      </div>
+      <button class="btn-pill btn-ghost" onclick="openRating()">Valorar a este artista</button>
+    </div>
+    <div class="reviews-list">
+      <div class="review">
+        <div class="review-top">
+          <div class="review-author">
+            <div class="review-av">D</div>
+            <div>
+              <div class="review-name">dragonlord_84</div>
+              <div class="review-stars">★★★★★</div>
+            </div>
+          </div>
+          <div class="review-date">Hace 1 semana</div>
+        </div>
+        <div class="review-text">Increíble trabajo con mi Liliana. Comunicación perfecta y el resultado superó lo que esperaba. Repetiré seguro.</div>
+      </div>
+      <div class="review">
+        <div class="review-top">
+          <div class="review-author">
+            <div class="review-av">M</div>
+            <div>
+              <div class="review-name">commander_fan</div>
+              <div class="review-stars">★★★★★</div>
+            </div>
+          </div>
+          <div class="review-date">Hace 3 semanas</div>
+        </div>
+        <div class="review-text">Muy profesional. Los tiempos que me dijo se cumplieron y el token quedó espectacular.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== AUTH ===== -->
+<div class="page" id="page-auth">
+  <div class="auth-wrap">
+    <div class="auth-logo" style="display:flex;justify-content:center;margin-bottom:0.35rem">
+      <svg viewBox="0 0 2048 2048" height="84" xmlns="http://www.w3.org/2000/svg" style="fill:var(--white)">
+        <!-- Generator: Adobe Illustrator 30.1.0, SVG Export Plug-In . SVG Version: 2.1.1 Build 136)  -->
+  <g>
+    <path d="M1496.09,1781.06l57.87.42c19.86.14,38.73-1.64,58.05-5.5,58.18-11.46,101.05-55.81,122.51-109.05l18.47,1.34-21.18,172.02-81.83.85-116.06-.53-225.07-.26c-.44-3.65-.52-7.14-.47-11.23,23.75-7.79,39.4-27.99,46.04-51.81,5.33-19.12,8.17-38.59,8.18-58.89l.24-422.2c.02-29.4-.84-62.09-11.96-88.76-7.03-16.86-21.98-27.27-40.37-27.77-.2-4.67-.17-8.64.13-12.96l71.43-18.82c101.35-26.7,253.25-34.46,357.55-17.59l5.17,38,14.35,114.18-18.39-2.18c-12.84-35.23-37.32-66.78-70.84-84.33-23.25-12.17-48.17-17.23-74.34-18.66-23.69-1.3-46.84-.52-70.34,3.21l-29.06,4.61-.02,248.02,62.56-3.5c15.41-.86,29.69-3.99,44.16-8.73,26.15-10.13,37.8-23.91,47-49.82l16.25,1.23.04,173.65-17.43.21c-5.5-20.62-18.44-36.24-37.5-45.62-31.64-15.97-79.73-10.92-115.09-8.17l-.04,288.66Z"/>
+    <path d="M1660.2,824.52c27.85-4.89,47.92-8.45,66.03-31.37,13.13-16.61,19.94-36.79,21.18-58.05,1.3-22.24-.14-49.77-11.32-69.42-10.83-19.03-31.19-30.82-53.03-30.84l-40.33-.04.15,362.01c0,12.26,2.74,23.72,5.31,34.94,3.56,15.55,14.67,26.13,28.93,32.24,1.36,2.35.56,7.01-1.21,9.05-22.65-2.68-44.58-6.54-67.29-7.37-19.03-.7-37.55-.96-56.49.23l-35.25,2.21c-.93-2.79-1.17-5.91-.55-8.88,28.68-11.22,32.23-40.35,32.22-68.16l-.05-204.61-.39-139.41c-.02-7.2-3.61-14.71-6.22-20.9-4.24-10.06-13.92-14.93-24.55-16.6-.51-3.19-.29-6.47.72-9.96l116.87-6.19c27.84-1.48,54.35-.99,82,.89,74,5.02,128.94,42.27,129.88,121.69.25,21.08-2.79,40.27-11.63,59.45-11.08,24.02-28.25,44.14-52.21,55.68l-19.15,9.23c9.05,23.37,19.44,45.23,29.94,68.01l24.24,52.56,20.62,41.46c29.16,58.61,70.46,128.05,128.43,161.72,3.53,2.05,8.25,3.02,12.13,4.89.94,2.25,1,5.98.57,9.18-66.33,2.3-129.77-24.43-175.66-72.26-21.11-22-38.53-46.1-53.33-72.95-23.03-41.79-41.49-85.06-59.15-129.45l-31.41-78.95Z"/>
+  </g>
+  <path d="M1449.69,1013.23c16.29-14.09,31.5-38.08,35.6-59.21,4.01-.32,7.55-.33,11.83,0l-3.86,62.21-3.75,54.43c-76.14,10.63-148.19,28.7-221.56,51.06l-45.16,13.76c-1.3-2.74-1.8-7.91.03-9.79,13.12-10.13,21.45-23.54,24.99-39.93,2.26-10.45,4.33-20.69,4.33-32l-.04-333.56-.95-14.21c-1.31-19.54-2.99-47.96-30.16-48.07-.07-3.67.02-6.96.41-10.47l84.73-17.22,99.94-15.99,71.47-9.96,5.28,62.64c.98,11.65,1.9,22.09,1.64,33.81l-10,.77c-8.18-20.82-26.12-35.69-48.88-37.99-27.63-2.8-54.76,2.01-82.25,7.9l.6,72.63,1.17,84.85c18.64-4.35,36.26-8.02,54.22-13.45,14.32-4.34,25.19-14.52,28.86-28.91,3.83-.52,6.98-.69,10.54-.57l.62,99.49-11.13.14c-2.28-7.56-6.04-13.54-13.29-16.48-10.34-3.39-21.05-3.34-31.78-.96l-39.47,8.78.14,130.97,1.26,43.61,56.28-14.07c17.89-4.47,33.72-12.52,48.34-24.2Z"/>
+  <path d="M638.22,1840.35c-2.59-2.64-1.83-7.3-.53-10.51,22.31-5.73,36.88-24.24,41.26-45.92,2.29-11.32,4.06-22.12,4.04-34.13l-.3-305.13c0-10.11-3.01-20.2-6.56-28.74-6.65-16.03-20.94-24.69-38.34-24.82-.98-3.21-1.02-7.03-.42-10.52l32.38-9.97,178.65-53.92,1.23,11.38c-28.67,16.72-41.07,47.51-42.85,79.86-.45,8.24-1.4,15.8-1.39,24.36l.34,323.49c.01,14.25,2.61,27.6,7.41,40.07,6.68,17.36,19.97,29.14,37.75,33.97.56,3.7.61,6.79-.02,10.51l-212.65.02Z"/>
+  <g>
+    <path d="M673.66,705.85c5.66,15.85,19.19,24,35.51,23.93.94,2.68,1.3,8.38-1.28,10.16l-63.06,18.92-96.75,27.51c-1.19-3.68-1.49-6.81-1.21-10.49,13.85-7.45,24.49-19.64,29.01-35.01,2.24-7.61,5.7-16,5.7-24.48l.09-470.81-37.68,1.44c-17.44.67-34.41,3.69-50.63,9.24-19.05,6.51-33.73,20.05-39.45,39.13-4.45.36-8.01.34-12.16-.38l10.51-95.6h152.61c4.28-.01,8.02-.54,12.27-.81l119.83.35,60.28.77,10.72,95.57c-4.8.51-8.54.4-12.75-.31-5.76-19.93-22.86-33.18-41.84-39.25-20.19-6.45-40.82-8.98-61.9-9.34l-25.11-.44.04,419.86c0,13.98,2.65,27.06,7.29,40.03Z"/>
+    <g>
+      <path d="M764.33,723.78c-.75-3.19-1.04-7.17-.69-10.14,4.14-2.89,8.64-5.44,11.45-9.42,10.17-14.38,14.39-30.61,14.38-48.39l-.2-268.7c0-7.09-3.61-13.69-5.3-20.07-3.23-12.16-13.1-14.78-24.08-17.26l.17-8.72,50.16-7.85c28.4-4.45,55.39-9.95,84.11-16.08.35,2.8.39,6.57.13,9.56-5.72,3.74-10.24,8.13-13.9,13.82-6.74,10.07-9.7,21.12-10.77,33.53l.13,103.02,95.62-30.69v-98.26c-.66-6.05-2.07-11.32-3.94-16.81-3.55-8.51-10.69-13.49-20.46-13.26l-.04-9.51,75-15.42,54.25-11.83.16,10.22c-17.74,7.57-26.16,31.87-26.15,49.61l.12,243.65c0,7.31,2.46,14.58,4.85,20.7,7.47,19.13,21.36,8.13,22.17,19.05.13,1.77-1,4.93-3.39,5.65l-127.38,38.22c-1.09-3.48-1.17-6.7-.89-10.4,10.05-4.85,16.19-13.51,19.56-23.67,3.02-7.64,5.46-14.96,6.29-23.38l-.14-119.95-95.58,31.33v117.56c-.02,8.83,2.1,16.67,5.99,24.15,4.75,6.72,11.34,9.69,20.41,9.28l-.39,10.43-41.92,12.38-89.71,27.68Z"/>
+      <path d="M1202.42,551.37l41.63-8.12c15.41-3.01,29.87-7.2,42.7-16.53,15.78-11.47,26.79-27.01,31.54-46.08,3.45-.45,6.24-.59,10.1-.48l-7.12,89.99-28.99,5.26-64.19,12.87c-30.76,6.17-60.13,14.45-90.37,22.41l-37.99,10-.51-10.1c25.97-11.3,25.64-53.22,25.62-76.77l-.18-209.67c0-10.03-2.91-19.48-6.86-27.95-3.49-7.49-10.8-10.16-19.16-8.7-.56-3.64-.6-7.21.27-10.92l210.25-28.44,7.55,76.42-9.88.94c-2.38-6.33-5.34-11.02-9.85-15.5-20.47-20.33-50.18-16.32-76.83-11.86l-17.58,2.94v101.87s31.67-5.65,31.67-5.65c12.15-2.17,26.36-10.35,29.83-23.46,2.76-.8,6.46-.89,10.1-.39l.02,76.46c-2.05,1.77-8.11,2.88-9.55.88-2.39-3.3-3.94-6.17-6.04-9.65-12.24-9.79-39.32-.24-56.14,1.88l-.06,108.37Z"/>
+    </g>
+  </g>
+  <g>
+    <path d="M1104.34,1556.92l-46.71,8.61.3,169.32c.03,17.01,2.38,33.05,7.34,48.67,7.03,22.14,23.13,38.83,45.23,45.74l.17,11.01-57.32.35-102.35.04-72.05-.35.03-10.47c21.77-6.95,37.95-22.95,44.67-45.12,5.17-17.09,7.37-34.45,7.37-52.91l.13-337.58c.01-33.28-7.66-77.7-50.43-75.76-.9-4.04-.95-7.73-.35-12.42l68.33-22.5,141.34-46.65,182.34-59.06,17.72,139.63c-5.37,1.91-10.94,3.24-16.96,4.36-18.12-37.08-46.69-54.05-88.19-53.05-43.22,1.44-86.86,19.6-127.31,33.93l.02,209.63c25.97-4.45,50.5-9.9,74.91-17.67,18.7-5.96,34.6-16.19,47.04-31.03,6.31-8.62,10.87-17.53,12.66-28.17l15.75-2.32-.14,9.99-.05,150.45-14.11,2.08-4.49-10.05c-7.14-16-21.25-26.26-38.57-29.51-15.29-2.66-30.39-2.13-46.31.8Z"/>
+    <path d="M1127.49,1166.95l-158.69,52.89c-7.31-11.78,6.77-11.9,15.8-30.11s11.58-38.07,11.58-58.92l-.04-372.57c-37.4,13.69-56.32,18.8-82.37,49.5-9.33,11.57-15.06,24.08-19.64,38.31-3.79.94-7.72,1.47-11.1,1.32l5.19-103.54,305.5-90.17,7.77,103.36-9.99,1.29c-5.41-19.46-26.08-34.96-45.63-36.16-23.51-1.45-34.08,1.88-57.14,8.45l.02,371.18c0,10.86,2.74,20.58,4.8,30.57,3.24,15.69,16.15,25.94,32.59,25.05,1.72,2.23,1.98,6.09,1.35,9.56Z"/>
+  </g>
+  <g>
+    <path d="M944.52,1147.27l-4.44,60.74c-.57,7.82-.69,14.88-2.47,22.61l-146.44,45.6-131.74,38.91-46.95,13.48-139.54,38.19c-2.85-4.65-1.05-8.53,2.98-11.82,10.93-8.92,20.23-21.15,22.36-35.53,3.96-26.73-2.15-48.64-9.06-74.7l-38.67-145.76c-27.15,22.92-54.62,43.06-84.47,60.82-18.61,11.08-37.25,19.81-57.63,26.74l-26.36,8.76-19.47,90.22-11.57,55.59c-1.45,6.98-1.05,14.94-.06,21.89,3.5,24.46,20.86,38.57,44.28,42.32.38,3.02.52,5.48.31,8.39l-201.5,47.6c-1.44-2.62-1.84-5.7-1.56-8.93,33.18-19.73,56.33-64.19,67.82-100.08,10.26-32.06,18.21-63.95,26.09-96.94l54.42-227.73,61.96-261.4,15.95-70.39c5.61-24.78,1.41-61.9-27.71-68.9-.27-3.69-.27-6.97.09-10.53l149-.04,97.31,361.37c23.52-8.36,47.32-10.77,70.45.13,16.34,7.7,26.55,22.39,30.68,39.79,2.51,10.59,2.91,21.17-1.72,31.49-.62,1.38-4.81,1.74-6.07.69-1.55-13.69-7.9-26.94-20.85-32.97-19.5-9.09-42.05-5.84-60.05,6.46l52.75,190.96c3.48,12.61,8.12,23.64,12.26,35.9,8.6,25.51,27.71,46.2,53.44,55.96,22.86-22.08,27.01-36.55,30.18-68.34v-366.58c0-11.09-2.54-21.64-6.25-31.36-4.59-12.03-15.59-18.17-28.33-18.66-.66-3.24-.56-6.59.37-9.87l162.17-48.23c1.08,2.21.91,6.82-.12,9.29-23.03,13.51-31.4,36.43-34.05,62.03-.52,5.01-1.13,9.31-1.13,14.86l.03,361.47c0,6.07.63,10.54,1.89,16.06,57.17-15.62,105.61-28.43,133.08-85.79,4.34-9.05,7.69-17.87,9.92-27.8,2.98-1.61,6.9-1.75,10.67-.84l-2.24,34.89ZM405.84,1063.89l29.52-23.71-44.46-174.16-20.52-80.73-16.34,73.75-17.05,77.06-30.54,143.14-10.6,48.84c36.24-12.02,80.93-40.86,109.98-64.18Z"/>
+    <path d="M617.76,1706.06l-15.95,134.3-317.06-.02-.25-8.86c6.16-2.94,11.63-5.34,17.42-8.66,18.84-10.8,21.63-42.96,21.62-62.57l-.14-229.07c0-12.6-3.16-24.95-9.42-35.18s-17.41-13.3-28.61-15.34c-.64-3.12-.7-6-.33-9.78l40.48-9.31,140.66-33.63c.95,2.93,1.28,6.58.88,10.05-27.78,14.73-33.5,38.99-35.37,68.03l-.98,15.21v272.97s40.27-.02,40.27-.02c12.26,0,23.79-1.43,35.81-3.35,46.94-8.97,80.18-40.32,96.43-84.75,4.72-.55,8.86-.56,14.55-.03Z"/>
+  </g>
+      </svg>
+    </div>
+    <div class="auth-sub" id="auth-sub">Crea tu cuenta gratis</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab" id="at-login" onclick="authMode('login')">Iniciar sesión</button>
+      <button class="auth-tab active" id="at-reg" onclick="authMode('register')">Registrarse</button>
+    </div>
+
+    <button class="social-btn" onclick="loginWithGoogle()">
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none">
+        <path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908C16.658 14.148 17.64 11.84 17.64 9.205z" fill="#4285F4"/>
+        <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+        <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+      </svg>
+      <span id="g-label">Registrarse con Google</span>
+    </button>
+
+    <button class="social-btn" onclick="loginWithGoogle()" style="background:#5865F2;border-color:#5865F2;color:#fff">
+      <svg width="18" height="14" viewBox="0 0 71 55" fill="none">
+        <path d="M60.1 4.9A58.5 58.5 0 0 0 45.6.4a.2.2 0 0 0-.2.1c-.6 1.1-1.3 2.6-1.8 3.7a54 54 0 0 0-16.2 0c-.5-1.2-1.2-2.6-1.9-3.7a.2.2 0 0 0-.2-.1A58.4 58.4 0 0 0 10.7 4.9a.2.2 0 0 0-.1.1C1.6 18.6-.9 31.9.3 45.1a.2.2 0 0 0 .1.2 58.8 58.8 0 0 0 17.7 9 .2.2 0 0 0 .2-.1c1.4-1.9 2.6-3.8 3.6-5.9a.2.2 0 0 0-.1-.3c-1.9-.7-3.7-1.6-5.5-2.6a.2.2 0 0 1 0-.4l1.1-.8a.2.2 0 0 1 .2 0 41.9 41.9 0 0 0 35.6 0 .2.2 0 0 1 .2 0l1.1.8a.2.2 0 0 1 0 .4c-1.7 1-3.6 1.9-5.5 2.6a.2.2 0 0 0-.1.3c1 2 2.3 4 3.6 5.9a.2.2 0 0 0 .2.1 58.6 58.6 0 0 0 17.7-9 .2.2 0 0 0 .1-.2c1.5-15.3-2.5-28.5-10.5-40.1a.2.2 0 0 0-.1-.1zM23.7 37c-3.5 0-6.4-3.2-6.4-7.1s2.8-7.1 6.4-7.1c3.6 0 6.5 3.2 6.4 7.1 0 3.9-2.8 7.1-6.4 7.1zm23.6 0c-3.5 0-6.4-3.2-6.4-7.1s2.8-7.1 6.4-7.1c3.6 0 6.5 3.2 6.4 7.1 0 3.9-2.8 7.1-6.4 7.1z" fill="#fff"/>
+      </svg>
+      <span id="d-label">Registrarse con Discord</span>
+    </button>
+
+    <div class="auth-div"><span>o</span></div>
+
+    <div id="f-name" class="field">
+      <label class="field-label">Nombre</label>
+      <input class="inp" type="text" placeholder="Tu nombre o alias">
+    </div>
+    <div class="field">
+      <label class="field-label">Email</label>
+      <input class="inp" type="email" placeholder="tucorreo@email.com">
+    </div>
+    <div class="field">
+      <label class="field-label">Contraseña</label>
+      <input class="inp" type="password" placeholder="••••••••">
+    </div>
+    <div id="f-country" class="field">
+      <label class="field-label">País</label>
+      <select class="sel">
+        <option>España</option><option>México</option><option>Argentina</option>
+        <option>Colombia</option><option>Chile</option><option>Otro</option>
+      </select>
+    </div>
+
+    <div class="optin" id="optin" onclick="toggleOptin()">
+      <span class="optin-box"></span>
+      <span>
+        <div class="optin-title">También quiero ofrecer encargos como artista</div>
+        <div class="optin-desc">Crea tu perfil, sube tus obras y recibe solicitudes de encargo. Puedes activarlo o desactivarlo después desde tu perfil.</div>
+      </span>
+    </div>
+
+    <button class="btn-block primary" id="auth-btn" onclick="submitAuth()">Crear cuenta</button>
+    <div class="auth-alt" id="auth-alt">¿Ya tienes cuenta? <a onclick="authMode('login')">Inicia sesión</a></div>
+  </div>
+</div>
+
+<!-- ===== ARTIST ONBOARDING ===== -->
+<div class="page" id="page-onboard">
+  <div class="ob-wrap">
+    <div class="ob-step">
+      <div class="ob-dot on"></div>
+      <div class="ob-dot on"></div>
+      <div class="ob-dot"></div>
+    </div>
+    <div class="ob-title">Configura tu perfil de artista</div>
+    <div class="ob-sub">Esto es lo que verán los compradores. Puedes editarlo cuando quieras desde tu panel.</div>
+
+    <div class="field">
+      <label class="field-label">Nombre artístico <span class="req">*</span></label>
+      <input class="inp" type="text" id="ob-name" placeholder="Como quieres aparecer en la plataforma">
+    </div>
+    <div class="field">
+      <label class="field-label">Bio corta</label>
+      <textarea class="txt" id="ob-bio" placeholder="Cuéntale a la gente quién eres y qué haces..."></textarea>
+    </div>
+
+    <div class="form-section-label">Juegos en los que trabajas</div>
+    <div class="games-grid" id="ob-games" style="margin-bottom:1.4rem">
+      <button class="game-chip" onclick="this.classList.toggle('on')">Magic</button>
+      <button class="game-chip" onclick="this.classList.toggle('on')">Pokémon</button>
+      <button class="game-chip" onclick="this.classList.toggle('on')">Lorcana</button>
+      <button class="game-chip" onclick="this.classList.toggle('on')">One Piece</button>
+      <button class="game-chip" onclick="this.classList.toggle('on')">Yu-Gi-Oh!</button>
+      <button class="game-chip" onclick="this.classList.toggle('on')">Otro</button>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Técnicas</label>
+      <input class="inp" type="text" id="ob-techniques" placeholder="Ej: acuarela, acrílico, digital...">
+    </div>
+    <div class="form-section-label">Tus redes sociales</div>
+    <p style="font-size:0.8rem;color:var(--text-mute);margin:-0.4rem 0 0.8rem;line-height:1.5">
+      Aparecerán en tu perfil. Es la mejor forma de que la gente te siga y te conozca.
+    </p>
+    <div class="field">
+      <label class="field-label">Instagram</label>
+      <input class="inp" type="text" id="ob-instagram" placeholder="@tuusuario">
+    </div>
+    <div class="field">
+      <label class="field-label">X / Twitter</label>
+      <input class="inp" type="text" id="ob-twitter" placeholder="@tuusuario">
+    </div>
+    <div class="field">
+      <label class="field-label">TikTok</label>
+      <input class="inp" type="text" id="ob-tiktok" placeholder="@tuusuario">
+    </div>
+    <div class="field">
+      <label class="field-label">Sitio web o tienda</label>
+      <input class="inp" type="text" id="ob-website" placeholder="https://...">
+    </div>
+
+    <div class="form-section-label">¿Cómo quieres recibir los encargos?</div>
+    <p style="font-size:0.8rem;color:var(--text-mute);margin:-0.4rem 0 0.8rem;line-height:1.5">
+      Cuando alguien rellene tu formulario, le pondremos en contacto contigo por el canal que elijas.
+    </p>
+    <div class="contact-pick">
+      <div class="contact-opt on" data-ch="email" onclick="pickContact(this)">
+        <span class="contact-opt-ic">📧</span>
+        <span class="contact-opt-label">Email</span>
+        <span class="contact-opt-check">✓</span>
+      </div>
+      <div class="contact-opt on" data-ch="discord" onclick="pickContact(this)">
+        <span class="contact-opt-ic" style="color:#5865F2">✪</span>
+        <span class="contact-opt-label">Discord</span>
+        <span class="contact-opt-check">✓</span>
+      </div>
+    </div>
+    <div class="field" id="ob-discord-field" style="margin-top:0.8rem">
+      <label class="field-label">Tu usuario de Discord</label>
+      <input class="inp" type="text" id="ob-discord" placeholder="usuario#0000 o @usuario">
+    </div>
+
+    <div class="form-section-label">Sube tus primeras obras</div>
+    <div class="upload" style="margin-bottom:1.4rem">
+      <div class="upload-ic">⊞</div>
+      <div class="upload-tx">Arrastra tus alters aquí · mínimo 3 recomendado</div>
+    </div>
+
+    <button class="btn-block primary" onclick="finishOnboard()">Crear mi perfil →</button>
+    <p class="fnote">El siguiente paso será configurar tu formulario de encargo.</p>
+  </div>
+</div>
+
+<!-- ===== ARTIST DASHBOARD ===== -->
+<div class="page" id="page-dash">
+  <div class="dash-wrap">
+    <div class="dash-head">
+      <div class="dash-title">Mi panel</div>
+      <button class="btn-pill btn-ghost" onclick="go('profile')">Ver mi perfil público →</button>
+    </div>
+
+    <!-- stats -->
+    <div class="dash-stats">
+      <div class="dash-stat">
+        <div class="dash-stat-n">3</div>
+        <div class="dash-stat-l">Solicitudes nuevas</div>
+      </div>
+      <div class="dash-stat">
+        <div class="dash-stat-n">28</div>
+        <div class="dash-stat-l">Obras subidas</div>
+      </div>
+      <div class="dash-stat">
+        <div class="dash-stat-n">4.9★</div>
+        <div class="dash-stat-l">Valoración media</div>
+      </div>
+    </div>
+
+    <!-- availability toggle -->
+    <div class="avail-toggle" onclick="toggleAvail()">
+      <div class="avail-toggle-txt">
+        <div class="avail-toggle-label" id="avail-label">Acepto encargos</div>
+        <div class="avail-toggle-desc" id="avail-desc">Los compradores pueden enviarte solicitudes</div>
+      </div>
+      <div class="toggle-switch on" id="avail-sw"></div>
+    </div>
+
+    <!-- solicitudes -->
+    <div class="dash-section-title">
+      Solicitudes de encargo
+      <span class="dash-badge">3 nuevas</span>
+    </div>
+    <div id="requests"></div>
+
+    <!-- form builder -->
+    <div class="dash-section-title" style="margin-top:2rem">Formulario de encargo</div>
+    <p style="font-size:0.82rem;color:var(--text-mute);margin-bottom:1rem;line-height:1.5">
+      Personaliza qué información pides a quien quiera encargarte algo. Arrastra para reordenar.
+    </p>
+    <div class="form-builder">
+      <div class="fb-header">
+        <div>
+          <div class="fb-title">Tu formulario de encargo</div>
+          <div class="fb-subtitle">Los campos marcados con * son obligatorios</div>
+        </div>
+        <button class="btn-sm btn-read" onclick="go('form')">Vista previa →</button>
+      </div>
+      <div class="fb-fields" id="fb-fields"></div>
+      <div class="fb-add">
+        <button class="fb-add-btn" onclick="addField('Texto corto')">+ Texto corto</button>
+        <button class="fb-add-btn" onclick="addField('Texto largo')">+ Texto largo</button>
+        <button class="fb-add-btn" onclick="addField('Imagen')">+ Subir imagen</button>
+        <button class="fb-add-btn" onclick="addField('Fecha')">+ Fecha</button>
+        <button class="fb-add-btn" onclick="addField('Selección')">+ Selección</button>
+      </div>
+    </div>
+
+    <!-- subir obra -->
+    <div class="dash-section-title" style="margin-top:2rem">Subir nueva obra</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:0.8rem">
+      <div class="field">
+        <label class="field-label">Carta / título <span class="req">*</span></label>
+        <input class="inp" type="text" placeholder="Ej: Liliana of the Veil">
+      </div>
+      <div class="field">
+        <label class="field-label">Juego <span class="req">*</span></label>
+        <select class="sel">
+          <option>Magic</option><option>Pokémon</option><option>Lorcana</option><option>One Piece</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:0.8rem">
+      <div class="field">
+        <label class="field-label">Estado</label>
+        <select class="sel">
+          <option>Portfolio (no en venta)</option>
+          <option>En venta</option>
+          <option>Vendida</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">Precio (si está en venta)</label>
+        <input class="inp" type="text" placeholder="Ej: 45€">
+      </div>
+    </div>
+    <div class="upload" style="margin-bottom:1.2rem">
+      <div class="upload-ic">↑</div>
+      <div class="upload-tx">Sube la imagen de la obra · JPG o PNG</div>
+    </div>
+    <button class="btn-block primary" style="max-width:200px">Publicar obra</button>
+  </div>
+</div>
+
+<!-- ===== COMMISSION FORM ===== -->
+<div class="page" id="page-form">
+  <div class="ob-wrap">
+    <span class="nav-lnk" style="display:inline-block;margin-bottom:1.2rem;padding-left:0" onclick="go('profile')">← Volver al perfil</span>
+
+    <div style="display:flex;align-items:center;gap:0.7rem;padding:0.85rem;background:var(--surface);border:1px solid var(--border-soft);border-radius:10px;margin-bottom:1.6rem">
+      <div class="av" style="width:38px;height:38px;font-size:1rem">🎨</div>
+      <div>
+        <div style="font-size:0.9rem;font-weight:600">Seraphic Arts</div>
+        <div style="font-size:0.74rem;color:var(--text-mute)">Responde habitualmente en 48h</div>
+      </div>
+    </div>
+
+    <div class="ob-title">Solicitar un encargo</div>
+    <div class="ob-sub">Rellena el formulario del artista y se pondrá en contacto contigo.</div>
+
+    <div id="dynamic-form"></div>
+
+    <button class="btn-block primary" style="margin-top:1.4rem" onclick="submitForm()">Enviar solicitud</button>
+    <p class="fnote">El artista recibirá tu solicitud y se pondrá en contacto contigo directamente.</p>
+  </div>
+</div>
+
+<!-- ===== CONFIRMATION ===== -->
+<div class="page" id="page-confirm">
+  <div class="auth-wrap" style="text-align:center;padding-top:5rem">
+    <div style="font-size:3rem;margin-bottom:1rem">✉️</div>
+    <div class="ob-title">¡Solicitud enviada!</div>
+    <div class="ob-sub">Seraphic Arts recibirá tu mensaje y se pondrá en contacto contigo en los próximos días.</div>
+    <button class="btn-block primary" style="margin-top:1.5rem" onclick="go('home')">Volver al inicio</button>
+    <button class="btn-block secondary" style="margin-top:0.5rem" onclick="go('profile')">Ver más obras del artista</button>
+  </div>
+</div>
+
+<!-- ===== SOBRE ALTERFORGE / CÓMO FUNCIONA ===== -->
+<div class="page" id="page-about">
+  <div class="about-hero">
+    <div class="about-hero-inner">
+      <div class="about-eyebrow">✦ La cofradía de artistas de TCG</div>
+      <h1 class="about-h1">Cada carta puede ser<br>una pieza <em>única</em></h1>
+      <p class="about-lead">The Alter Life conecta a coleccionistas y jugadores con artistas que pintan alters y tokens personalizados. Un solo lugar para descubrir talento y encargar tu obra.</p>
+      <button class="btn-pill btn-light" style="padding:0.7rem 1.5rem" onclick="go('home')">Explorar obras</button>
+    </div>
+  </div>
+
+  <div class="about-section">
+    <div class="about-section-title">Cómo funciona</div>
+    <div class="how-grid">
+      <div class="how-card">
+        <div class="how-num">1</div>
+        <div class="how-title">Descubre</div>
+        <div class="how-text">Explora el muro de alters y tokens. Filtra por juego, técnica o estilo hasta encontrar un artista que te enamore.</div>
+      </div>
+      <div class="how-card">
+        <div class="how-num">2</div>
+        <div class="how-title">Encarga</div>
+        <div class="how-text">Rellena el formulario del artista con tu idea, referencias y la carta que quieres alterar. Cada artista pide lo que necesita.</div>
+      </div>
+      <div class="how-card">
+        <div class="how-num">3</div>
+        <div class="how-title">Conecta</div>
+        <div class="how-text">El artista recibe tu solicitud por email o Discord y se pone en contacto contigo para cerrar los detalles y el pago.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="about-section">
+    <div class="about-split">
+      <div class="about-split-card">
+        <div class="about-split-ic">🎨</div>
+        <div class="about-split-title">Para artistas</div>
+        <div class="about-split-text">Crea tu perfil gratis, sube tu portfolio y configura tu propio formulario de encargo. Tú pones tus tarifas, tus tiempos y cómo quieres que te contacten.</div>
+        <button class="btn-pill btn-ghost" style="margin-top:0.4rem" onclick="go('auth')">Únete como artista</button>
+      </div>
+      <div class="about-split-card">
+        <div class="about-split-ic">🃏</div>
+        <div class="about-split-title">Para coleccionistas</div>
+        <div class="about-split-text">Encuentra el artista perfecto para esa carta especial. Guarda tus obras favoritas y encarga directamente sin intermediarios ni complicaciones.</div>
+        <button class="btn-pill btn-ghost" style="margin-top:0.4rem" onclick="go('home')">Empezar a explorar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="about-section">
+    <div class="about-faq">
+      <div class="about-section-title" style="text-align:left;margin-bottom:1.2rem">Preguntas frecuentes</div>
+      <div class="faq-item">
+        <div class="faq-q">¿The Alter Life cobra comisión?</div>
+        <div class="faq-a">No. El contacto entre artista y cliente es directo, y el pago lo acordáis entre vosotros. The Alter Life es gratis y se mantiene con donaciones de la comunidad.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">¿Cómo se paga al artista?</div>
+        <div class="faq-a">Eso lo acordáis directamente con el artista cuando os pongáis en contacto. Cada artista tiene su método preferido (Bizum, PayPal, etc.).</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">¿Puedo ser comprador y artista a la vez?</div>
+        <div class="faq-a">Sí. Tu cuenta es única. Puedes activar el modo artista desde tus ajustes en cualquier momento y empezar a recibir encargos.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">¿Cómo apoyo el proyecto?</div>
+        <div class="faq-a">Con el botón de donación que verás abajo a la derecha. Puedes contribuir vía PayPal o Buy Me a Coffee — ayuda a mantener The Alter Life en marcha.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="about-cta">
+    <div class="about-cta-title">¿Listo para empezar?</div>
+    <div class="about-cta-sub">Descubre artistas o crea tu perfil. Es gratis.</div>
+    <div style="display:flex;gap:0.6rem;justify-content:center;flex-wrap:wrap;margin-top:1.2rem">
+      <button class="btn-pill btn-light" style="padding:0.7rem 1.5rem" onclick="go('home')">Explorar obras</button>
+      <button class="btn-pill btn-ghost" style="padding:0.7rem 1.5rem" onclick="go('auth')">Crear cuenta</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== USER SETTINGS ===== -->
+<div class="page" id="page-settings">
+  <div class="ob-wrap">
+    <div class="ob-title">Ajustes</div>
+    <div class="ob-sub">Gestiona tu cuenta y tus preferencias.</div>
+
+    <div class="form-section-label">Tu cuenta</div>
+    <div class="field">
+      <label class="field-label">Nombre</label>
+      <input class="inp" type="text" value="Tu nombre">
+    </div>
+    <div class="field">
+      <label class="field-label">Email</label>
+      <input class="inp" type="email" value="tucorreo@email.com">
+    </div>
+    <div class="field">
+      <label class="field-label">País</label>
+      <select class="sel">
+        <option>España</option><option>México</option><option>Argentina</option>
+        <option>Colombia</option><option>Chile</option><option>Otro</option>
+      </select>
+    </div>
+
+    <div class="form-section-label">Modo artista</div>
+    <div class="avail-toggle" onclick="toggleArtistMode()" style="margin-bottom:0.5rem">
+      <div class="avail-toggle-txt">
+        <div class="avail-toggle-label" id="am-label">Modo artista desactivado</div>
+        <div class="avail-toggle-desc" id="am-desc">Actívalo para crear tu perfil y recibir encargos</div>
+      </div>
+      <div class="toggle-switch" id="am-switch"></div>
+    </div>
+    <p class="fnote" style="text-align:left;margin-bottom:1.4rem">
+      Al activarlo te llevaremos a configurar tu perfil de artista.
+    </p>
+
+    <div id="settings-artist-block" style="display:none">
+      <div class="form-section-label">Cómo recibes encargos</div>
+      <p style="font-size:0.8rem;color:var(--text-mute);margin:-0.4rem 0 0.8rem;line-height:1.5">
+        Elige por dónde quieres que te lleguen las solicitudes. Solo visible si tienes el modo artista activo.
+      </p>
+      <div class="contact-pick">
+        <div class="contact-opt on" data-ch="email" onclick="pickContactSettings(this)">
+          <span class="contact-opt-ic">📧</span>
+          <span class="contact-opt-label">Email</span>
+          <span class="contact-opt-check">✓</span>
+        </div>
+        <div class="contact-opt on" data-ch="discord" onclick="pickContactSettings(this)">
+          <span class="contact-opt-ic" style="color:#5865F2">✪</span>
+          <span class="contact-opt-label">Discord</span>
+          <span class="contact-opt-check">✓</span>
+        </div>
+      </div>
+      <div class="field" id="set-discord-field" style="margin-top:0.8rem">
+        <label class="field-label">Tu usuario de Discord</label>
+        <input class="inp" type="text" placeholder="usuario#0000 o @usuario">
+      </div>
+    </div>
+
+    <div class="form-section-label">Notificaciones</div>
+    <div class="set-row">
+      <span class="set-row-label">Avisarme por email de nuevas solicitudes</span>
+      <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="set-row">
+      <span class="set-row-label">Novedades y mejoras de The Alter Life</span>
+      <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+    </div>
+
+    <div style="margin-top:1.8rem;display:flex;gap:0.6rem">
+      <button class="btn-block primary" style="max-width:160px">Guardar cambios</button>
+    </div>
+
+    <div class="set-danger">
+      <div class="set-danger-title">Zona peligrosa</div>
+      <button class="set-danger-btn">Eliminar mi cuenta</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SAVED WORKS ===== -->
+<div class="page" id="page-saved">
+  <div class="grid-wrap" style="padding-top:2rem">
+    <div style="max-width:1100px;margin:0 auto 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.8rem">
+      <div>
+        <div class="ob-title" style="margin-bottom:0.2rem">Obras guardadas</div>
+        <div style="font-size:0.86rem;color:var(--text-mute)">Tus alters favoritos, todo en un sitio.</div>
+      </div>
+      <button class="btn-pill btn-ghost" onclick="toggleSavedEmpty()" style="font-size:0.78rem">Demo: vaciar/llenar</button>
+    </div>
+
+    <!-- empty state -->
+    <div id="saved-empty" style="display:none">
+      <div class="empty">
+        <div class="empty-ic">🃏</div>
+        <div class="empty-title">Aún no has guardado nada</div>
+        <div class="empty-text">Cuando veas un alter que te guste, pulsa "Guardar" y aparecerá aquí para no perderlo.</div>
+        <button class="btn-pill btn-light" onclick="go('home')">Explorar obras</button>
+      </div>
+    </div>
+
+    <div class="masonry" id="saved-wall"></div>
+  </div>
+</div>
+
+<!-- ===== 404 ===== -->
+<div class="page" id="page-404">
+  <div class="empty" style="padding-top:6rem;max-width:400px">
+    <div class="empty-ic">🔍</div>
+    <div class="empty-title">Página no encontrada</div>
+    <div class="empty-text">Esta página no existe o ha sido eliminada. Quizá el artista cambió su perfil o la obra ya no está disponible.</div>
+    <div style="display:flex;gap:0.6rem;flex-wrap:wrap;justify-content:center">
+      <button class="btn-pill btn-light" onclick="go('home')">Volver al inicio</button>
+      <button class="btn-pill btn-ghost" onclick="go('about')">¿Qué es The Alter Life?</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== RATING MODAL ===== -->
+<div class="modal-bg" id="rating-modal" onclick="if(event.target===this)closeRating()">
+  <div class="rating-box">
+    <button class="modal-close" onclick="closeRating()">✕</button>
+    <div class="rating-box-inner" id="rating-step-1">
+      <div class="rating-av">🎨</div>
+      <div class="rating-title">Valora a Seraphic Arts</div>
+      <div class="rating-sub">Solo puedes valorar artistas con los que hayas completado un encargo.</div>
+      <div class="star-input" id="star-input">
+        <span class="star" data-v="1" onclick="setStars(1)">★</span>
+        <span class="star" data-v="2" onclick="setStars(2)">★</span>
+        <span class="star" data-v="3" onclick="setStars(3)">★</span>
+        <span class="star" data-v="4" onclick="setStars(4)">★</span>
+        <span class="star" data-v="5" onclick="setStars(5)">★</span>
+      </div>
+      <div class="star-hint" id="star-hint">Toca para puntuar</div>
+      <textarea class="txt" id="rating-text" placeholder="Cuenta tu experiencia con este artista (opcional)..." style="margin-bottom:1rem"></textarea>
+      <button class="btn-block primary" id="rating-submit" onclick="submitRating()" disabled>Enviar valoración</button>
+    </div>
+    <div class="rating-box-inner" id="rating-step-2" style="display:none;text-align:center">
+      <div style="font-size:2.6rem;margin-bottom:0.8rem">🌟</div>
+      <div class="rating-title">¡Gracias por tu valoración!</div>
+      <div class="rating-sub">Tu reseña ayuda a otros coleccionistas a encontrar buenos artistas.</div>
+      <button class="btn-block primary" onclick="closeRating()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== OBRA MODAL ===== -->
+<div class="modal-bg" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-art">
+      <div class="modal-card-img" id="m-img"></div>
+    </div>
+    <div class="modal-info">
+      <div class="modal-title" id="m-title">—</div>
+      <div class="modal-game" id="m-game">—</div>
+      <div class="modal-state" id="m-state"></div>
+      <div class="modal-artist-row" onclick="closeModal();go('profile')">
+        <div class="modal-av">🎨</div>
+        <div>
+          <div class="modal-artist-name" id="m-artist">—</div>
+          <div class="modal-artist-meta">Ver feed del artista →</div>
+        </div>
+      </div>
+      <div class="modal-desc">Alter pintado a mano sobre carta original. El artista puede crear un encargo en estilo similar adaptado a tu carta.</div>
+      <div class="modal-price" id="m-price"></div>
+      <div class="modal-actions">
+        <button class="btn-block primary" id="m-cta" onclick="closeModal();go('form')">Solicitar encargo similar</button>
+        <button class="btn-block secondary" onclick="closeModal();go('profile')">Ver más obras de este artista</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DONATION ===== -->
+<div class="donate" id="donate">
+  <button class="donate-toggle" onclick="toggleDonate()">
+    <span class="donate-heart">♥</span>
+    <span id="donate-label">Apóyanos</span>
+  </button>
+  <div class="donate-options">
+    <a class="donate-opt" href="#" target="_blank">
+      <span class="donate-ic ic-pp">PP</span> Donar con PayPal
+    </a>
+    <a class="donate-opt" href="#" target="_blank">
+      <span class="donate-ic ic-bmc">☕</span> Buy Me a Coffee
+    </a>
+  </div>
+</div>
+
+<!-- ===== FIRST VISIT BUBBLE ===== -->
+<div class="first-visit" id="first-visit">
+  <button class="fv-close" onclick="dismissFirstVisit()">✕</button>
+  <div class="fv-body">
+    <div class="fv-title">¿Qué es The Alter Life?</div>
+    <div class="fv-text">La plataforma donde descubrir artistas de alters y tokens para TCG y encargar tu próxima carta única.</div>
+    <button class="fv-btn" onclick="dismissFirstVisit();go('about')">Descúbrelo →</button>
+  </div>
+</div>
+
+<script>
+  // ===== DATA =====
+  const pins = [
+    { title:'Liliana, Dusk Rose',  game:'Magic · Full art',  artist:'Seraphic Arts', state:'sale',  price:'90€',  art:'a1' },
+    { title:'Charizard Holo',      game:'Pokémon · Alter',   artist:'Ember & Ink',   state:'sold',  price:'45€',  art:'a3' },
+    { title:'Jace Mirror Mage',    game:'Magic · Token',     artist:'VoidBrush',     state:'folio', price:null,   art:'a2' },
+    { title:'Elsa of Arendelle',   game:'Lorcana · Full art',artist:'CrystalPaint',  state:'sale',  price:'60€',  art:'a6' },
+    { title:'Forest (alter)',      game:'Magic · Basic land',artist:'Greenleaf',     state:'sold',  price:'35€',  art:'a4' },
+    { title:'Monkey D. Luffy',     game:'One Piece · Alter', artist:'NightForge',    state:'sale',  price:'55€',  art:'a7' },
+    { title:'Spirit Token 1/1',    game:'Magic · Token',     artist:'Seraphic Arts', state:'folio', price:null,   art:'a5' },
+    { title:'Pikachu VMAX',        game:'Pokémon · Alter',   artist:'CrystalPaint',  state:'sale',  price:'70€',  art:'a9' },
+    { title:'Urza Lord Protector', game:'Magic · Alter',     artist:'VoidBrush',     state:'sold',  price:'80€',  art:'a8' },
+    { title:'Island (alter)',      game:'Magic · Basic land',artist:'Greenleaf',     state:'sale',  price:'30€',  art:'a2' },
+    { title:'Mirri Duelist',       game:'Magic · Full art',  artist:'Ember & Ink',   state:'folio', price:null,   art:'a10'},
+    { title:'Zombie Token 2/2',    game:'Magic · Token',     artist:'NightForge',    state:'sale',  price:'25€',  art:'a6' },
+    { title:'Sol Ring',            game:'Magic · Alter',     artist:'Seraphic Arts', state:'sold',  price:'65€',  art:'a3' },
+    { title:'Mewtwo GX',           game:'Pokémon · Alter',   artist:'VoidBrush',     state:'sale',  price:'75€',  art:'a1' },
+    { title:'Treasure Token',      game:'Magic · Token',     artist:'CrystalPaint',  state:'folio', price:null,   art:'a5' },
+  ];
+
+  const stateLabel = { for_sale:'En venta', sold:'Vendida', portfolio:'Portfolio' };
+  const stateCls   = { for_sale:'badge-sale', sold:'badge-sold', portfolio:'badge-folio' };
+
+  const defaultFormFields = [
+    { type:'Texto corto', label:'Nombre de la carta',  req:true  },
+    { type:'Selección',   label:'Juego',               req:true  },
+    { type:'Imagen',      label:'Imagen de referencia',req:false },
+    { type:'Texto largo', label:'Descripción del estilo que buscas', req:true },
+    { type:'Fecha',       label:'Fecha límite',        req:false },
+    { type:'Texto largo', label:'Notas adicionales',   req:false },
+  ];
+
+  let formFields = [...defaultFormFields];
+  let allArtworks = []; // cache of loaded artworks
+
+  // ===== MURO REAL (Supabase) =====
+  async function loadMuro() {
+    const wall = document.getElementById('home-wall');
+    const empty = document.getElementById('home-empty');
+    if (!wall) return;
+
+    // Show loading skeleton
+    wall.innerHTML = Array(6).fill(`
+      <div class="pin">
+        <div class="pin-card" style="background:var(--surface-2);border-radius:14px;animation:pulse 1.5s ease-in-out infinite"></div>
+      </div>`).join('');
+
+    const { data: artworks, error } = await supa
+      .from('artworks')
+      .select(`*, artists(display_name, id)`)
+      .order('score', { ascending: false })
+      .limit(40);
+
+    if (error || !artworks || artworks.length === 0) {
+      // Fallback to demo pins if DB is empty
+      wall.innerHTML = '';
+      buildWallDemo();
+      return;
+    }
+
+    allArtworks = artworks;
+    wall.innerHTML = artworks.map((p, i) => `
+      <div class="pin" onclick="openModal(${i})">
+        <div class="pin-card">
+          ${p.image_url
+            ? `<img src="${p.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:14px 14px 0 0" loading="lazy">`
+            : `<div class="pin-art a${(i%10)+1}" style="width:100%;height:100%"></div>`}
+          <div class="pin-badge ${stateCls[p.status] || 'badge-folio'}">${stateLabel[p.status] || 'Portfolio'}</div>
+          <div class="pin-ov">
+            <button class="pin-save" onclick="event.stopPropagation();saveArtwork('${p.id}',this)">Guardar</button>
+            <div class="pin-ov-artist">
+              <div class="pin-ov-dot">🎨</div>
+              <div class="pin-ov-name">${p.artists?.display_name || 'Artista'}</div>
+            </div>
+          </div>
+        </div>
+        <div class="pin-meta">
+          <div class="pin-title">${p.title}</div>
+          <div class="pin-sub">${p.game || ''}</div>
+          ${p.price ? `<div class="pin-price">${p.status==='sold'?'<s style="color:var(--text-mute)">'+p.price+'€</s> · Vendida':p.price+'€'}</div>` : ''}
+        </div>
+      </div>
+    `).join('');
+
+    if (empty) empty.style.display = 'none';
+  }
+
+  // Fallback demo wall for when DB is empty
+  const demoPins = [
+    { title:'Liliana, Dusk Rose',  game:'Magic · Full art',  artist:'Seraphic Arts', status:'for_sale', price:90,  art:'a1' },
+    { title:'Charizard Holo',      game:'Pokémon · Alter',   artist:'Ember & Ink',   status:'sold',     price:45,  art:'a3' },
+    { title:'Jace Mirror Mage',    game:'Magic · Token',     artist:'VoidBrush',     status:'portfolio',price:null,art:'a2' },
+    { title:'Elsa of Arendelle',   game:'Lorcana · Full art',artist:'CrystalPaint',  status:'for_sale', price:60,  art:'a6' },
+    { title:'Forest (alter)',      game:'Magic · Basic land',artist:'Greenleaf',     status:'sold',     price:35,  art:'a4' },
+    { title:'Monkey D. Luffy',     game:'One Piece · Alter', artist:'NightForge',    status:'for_sale', price:55,  art:'a7' },
+    { title:'Spirit Token 1/1',    game:'Magic · Token',     artist:'Seraphic Arts', status:'portfolio',price:null,art:'a5' },
+    { title:'Pikachu VMAX',        game:'Pokémon · Alter',   artist:'CrystalPaint',  status:'for_sale', price:70,  art:'a9' },
+    { title:'Urza Lord Protector', game:'Magic · Alter',     artist:'VoidBrush',     status:'sold',     price:80,  art:'a8' },
+    { title:'Island (alter)',      game:'Magic · Basic land',artist:'Greenleaf',     status:'for_sale', price:30,  art:'a2' },
+    { title:'Mirri Duelist',       game:'Magic · Full art',  artist:'Ember & Ink',   status:'portfolio',price:null,art:'a10'},
+    { title:'Zombie Token 2/2',    game:'Magic · Token',     artist:'NightForge',    status:'for_sale', price:25,  art:'a6' },
+    { title:'Sol Ring',            game:'Magic · Alter',     artist:'Seraphic Arts', status:'sold',     price:65,  art:'a3' },
+    { title:'Mewtwo GX',           game:'Pokémon · Alter',   artist:'VoidBrush',     status:'for_sale', price:75,  art:'a1' },
+    { title:'Treasure Token',      game:'Magic · Token',     artist:'CrystalPaint',  status:'portfolio',price:null,art:'a5' },
+  ];
+
+  function buildWallDemo() {
+    allArtworks = demoPins;
+    const wall = document.getElementById('home-wall');
+    if (!wall) return;
+    wall.innerHTML = demoPins.map((p,i) => `
+      <div class="pin" onclick="openModal(${i})">
+        <div class="pin-card">
+          <div class="pin-art ${p.art}" style="width:100%;height:100%"></div>
+          <div class="pin-badge ${stateCls[p.status]}">${stateLabel[p.status]}</div>
+          <div class="pin-ov">
+            <button class="pin-save" onclick="event.stopPropagation()">Guardar</button>
+            <div class="pin-ov-artist">
+              <div class="pin-ov-dot">🎨</div>
+              <div class="pin-ov-name">${p.artist}</div>
+            </div>
+          </div>
+        </div>
+        <div class="pin-meta">
+          <div class="pin-title">${p.title}</div>
+          <div class="pin-sub">${p.game}</div>
+          ${p.price ? `<div class="pin-price">${p.status==='sold'?'<s style="color:var(--text-mute)">'+p.price+'€</s> · Vendida':p.price+'€'}</div>` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Save artwork to saved_artworks
+  async function saveArtwork(artworkId, btn) {
+    if (!currentUser) { go('auth'); return; }
+    const { error } = await supa.from('saved_artworks').insert({ user_id: currentUser.id, artwork_id: artworkId });
+    if (!error) { btn.textContent = '✓ Guardado'; btn.style.background = 'var(--green)'; btn.style.color = '#fff'; }
+  }
+
+  // ===== WALL (legacy helper) =====
+  function buildWall(id, data) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = data.map((p,i) => `
+      <div class="pin" onclick="openModal(${i})">
+        <div class="pin-card">
+          <div class="pin-art ${p.art||'a1'}" style="width:100%;height:100%"></div>
+          <div class="pin-badge ${stateCls[p.status]||'badge-folio'}">${stateLabel[p.status]||'Portfolio'}</div>
+          <div class="pin-ov">
+            <button class="pin-save" onclick="event.stopPropagation()">Guardar</button>
+            <div class="pin-ov-artist">
+              <div class="pin-ov-dot">🎨</div>
+              <div class="pin-ov-name">${p.artist||p.artists?.display_name||'Artista'}</div>
+            </div>
+          </div>
+        </div>
+        <div class="pin-meta">
+          <div class="pin-title">${p.title}</div>
+          <div class="pin-sub">${p.game||''}</div>
+          ${p.price ? `<div class="pin-price">${p.status==='sold'?'<s style="color:var(--text-mute)">'+p.price+'€</s> · Vendida':p.price+'€'}</div>` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ===== MODAL =====
+  function openModal(i) {
+    const p = allArtworks[i];
+    if (!p) return;
+    const img = document.getElementById('m-img');
+    if (p.image_url) {
+      img.innerHTML = `<img src="${p.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">`;
+    } else {
+      img.className = 'modal-card-img ' + (p.art || 'a1');
+      img.innerHTML = '';
+    }
+    document.getElementById('m-title').textContent  = p.title;
+    document.getElementById('m-game').textContent   = p.game || '';
+    document.getElementById('m-artist').textContent = p.artists?.display_name || p.artist || 'Artista';
+
+    const stateEl = document.getElementById('m-state');
+    const st = p.status || p.state;
+    const stMap = { for_sale:'badge-sale', sold:'badge-sold', portfolio:'badge-folio', sale:'badge-sale', folio:'badge-folio' };
+    const stLbl = { for_sale:'En venta', sold:'Vendida', portfolio:'Portfolio', sale:'En venta', folio:'Portfolio' };
+    stateEl.innerHTML = `<span class="pin-badge ${stMap[st]||'badge-folio'}" style="position:static;display:inline-flex">${stLbl[st]||'Portfolio'}</span>`;
+
+    const priceEl = document.getElementById('m-price');
+    const ctaEl   = document.getElementById('m-cta');
+    const price = p.price ? p.price + '€' : null;
+    if ((st === 'for_sale' || st === 'sale') && price) {
+      priceEl.innerHTML = price + ' <span>precio orientativo</span>';
+      ctaEl.disabled = false; ctaEl.textContent = 'Solicitar encargo similar';
+    } else if (st === 'sold') {
+      priceEl.innerHTML = `<span style="color:var(--text-mute)">Vendida · ${price||''}</span>`;
+      ctaEl.disabled = false; ctaEl.textContent = 'Encargar algo similar';
+    } else {
+      priceEl.innerHTML = '<span style="color:var(--text-mute)">Solo portfolio</span>';
+      ctaEl.disabled = false; ctaEl.textContent = 'Encargar algo similar';
+    }
+
+    document.getElementById('modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // ===== NAVIGATION =====
+  function go(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    document.querySelectorAll('.nav-lnk, .nav-lnk-always').forEach(n => n.classList.remove('active'));
+    // hide Explorar on home, show on other pages
+    const nlHome = document.getElementById('nl-home');
+    nlHome.style.display = page === 'home' ? 'none' : '';
+    if (page === 'home')  nlHome.classList.add('active');
+    if (page === 'about') document.getElementById('nl-about') && document.getElementById('nl-about').classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  // ===== AUTH =====
+  let isRegister = true;
+  let isArtist   = false;
+  let currentUser = null;
+
+  // Check session on load
+  supa.auth.getSession().then(({ data: { session } }) => {
+    if (session) {
+      currentUser = session.user;
+      loadUserProfile(session.user.id);
+    }
+  });
+
+  // Listen for auth changes
+  supa.auth.onAuthStateChange((_event, session) => {
+    if (session) {
+      currentUser = session.user;
+      loadUserProfile(session.user.id);
+    } else {
+      currentUser = null;
+      showLoggedOut();
+    }
+  });
+
+  async function loadUserProfile(userId) {
+    const { data: profile } = await supa.from('profiles').select('*').eq('id', userId).single();
+    const { data: artist }  = await supa.from('artists').select('id').eq('id', userId).single();
+    isArtist = !!artist;
+    showLoggedIn(profile?.username || currentUser?.email?.split('@')[0] || 'Tú');
+    if (isArtist) document.getElementById('udd-dash').style.display = 'flex';
+    loadMuro();
+  }
+
+  function authMode(mode) {
+    isRegister = mode === 'register';
+    document.getElementById('at-reg').classList.toggle('active', isRegister);
+    document.getElementById('at-login').classList.toggle('active', !isRegister);
+    const show = isRegister ? '' : 'none';
+    ['f-name','f-country','optin'].forEach(id => document.getElementById(id).style.display = show);
+    document.getElementById('auth-sub').textContent  = isRegister ? 'Crea tu cuenta gratis' : 'Bienvenido de vuelta';
+    document.getElementById('auth-btn').textContent  = isRegister ? 'Crear cuenta' : 'Iniciar sesión';
+    document.getElementById('g-label').textContent   = isRegister ? 'Registrarse con Google' : 'Entrar con Google';
+    document.getElementById('d-label').textContent   = isRegister ? 'Registrarse con Discord' : 'Entrar con Discord';
+    document.getElementById('auth-alt').innerHTML    = isRegister
+      ? '¿Ya tienes cuenta? <a onclick="authMode(\'login\')">Inicia sesión</a>'
+      : '¿No tienes cuenta? <a onclick="authMode(\'register\')">Regístrate</a>';
+  }
+
+  function toggleOptin() {
+    isArtist = !isArtist;
+    document.getElementById('optin').classList.toggle('on', isArtist);
+  }
+
+  async function loginWithGoogle() {
+    const { error } = await supa.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.href }
+    });
+    if (error) showAuthError('Error al conectar con Google. Inténtalo de nuevo.');
+  }
+
+  async function loginWithDiscord() {
+    const { error } = await supa.auth.signInWithOAuth({
+      provider: 'discord',
+      options: { redirectTo: window.location.href }
+    });
+    if (error) showAuthError('Error al conectar con Discord. Inténtalo de nuevo.');
+  }
+
+  async function submitAuth() {
+    const email    = document.getElementById('inp-email')?.value?.trim();
+    const password = document.getElementById('inp-pass')?.value;
+    const name     = document.getElementById('inp-name')?.value?.trim();
+
+    if (!email || !password) { showAuthError('Rellena el email y la contraseña.'); return; }
+
+    setAuthLoading(true);
+
+    if (isRegister) {
+      const { error } = await supa.auth.signUp({
+        email, password,
+        options: { data: { display_name: name || email.split('@')[0] } }
+      });
+      if (error) { showAuthError(error.message); setAuthLoading(false); return; }
+      // Save extra profile data
+      const { data: { user } } = await supa.auth.getUser();
+      if (user) {
+        await supa.from('profiles').upsert({ id: user.id, email, username: name || email.split('@')[0] });
+        if (isArtist) { go('onboard'); } else { go('home'); }
+      }
+    } else {
+      const { error } = await supa.auth.signInWithPassword({ email, password });
+      if (error) { showAuthError('Email o contraseña incorrectos.'); setAuthLoading(false); return; }
+    }
+    setAuthLoading(false);
+  }
+
+  function setAuthLoading(loading) {
+    const btn = document.getElementById('auth-btn');
+    if (btn) { btn.disabled = loading; btn.textContent = loading ? 'Un momento...' : (isRegister ? 'Crear cuenta' : 'Iniciar sesión'); }
+  }
+
+  function showAuthError(msg) {
+    let el = document.getElementById('auth-error');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'auth-error';
+      el.style.cssText = 'color:#e05555;font-size:0.82rem;text-align:center;margin-top:0.5rem;';
+      document.getElementById('auth-btn')?.after(el);
+    }
+    el.textContent = msg;
+  }
+
+  function showLoggedIn(name) {
+    document.getElementById('btn-entrar').style.display = 'none';
+    document.getElementById('user-menu').style.display  = 'block';
+    const av = document.getElementById('user-av');
+    if (av && name) av.textContent = name.charAt(0).toUpperCase();
+  }
+
+  function showLoggedOut() {
+    document.getElementById('btn-entrar').style.display = '';
+    document.getElementById('user-menu').style.display  = 'none';
+    document.getElementById('udd-dash').style.display   = 'none';
+    isArtist = false;
+  }
+
+  function toggleUserMenu() {
+    document.getElementById('user-dropdown').classList.toggle('open');
+  }
+  function closeUserMenu() {
+    document.getElementById('user-dropdown').classList.remove('open');
+  }
+  async function logout() {
+    closeUserMenu();
+    await supa.auth.signOut();
+    go('home');
+  }
+  document.addEventListener('click', e => {
+    const um = document.getElementById('user-menu');
+    if (um && !um.contains(e.target)) closeUserMenu();
+  });
+
+  async function finishOnboard() {
+    // must be logged in
+    if (!currentUser) {
+      alert('Debes iniciar sesión antes de crear tu perfil de artista.');
+      go('auth');
+      return;
+    }
+
+    const btn = document.querySelector('#page-onboard .btn-block.primary');
+    const displayName = document.getElementById('ob-name').value.trim();
+
+    if (!displayName) {
+      alert('El nombre artístico es obligatorio.');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Creando tu perfil...';
+
+    // collect games
+    const games = [];
+    document.querySelectorAll('#ob-games .game-chip.on').forEach(ch => games.push(ch.textContent.trim()));
+
+    // collect techniques (comma separated -> array)
+    const techRaw = document.getElementById('ob-techniques').value.trim();
+    const techniques = techRaw ? techRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+    // contact channels
+    const contactEmail   = document.querySelector('#page-onboard .contact-opt[data-ch="email"]').classList.contains('on');
+    const contactDiscord = document.querySelector('#page-onboard .contact-opt[data-ch="discord"]').classList.contains('on');
+
+    // build artist record
+    const artistData = {
+      id: currentUser.id,
+      display_name: displayName,
+      bio: document.getElementById('ob-bio').value.trim(),
+      games: games,
+      techniques: techniques,
+      contact_email: contactEmail,
+      contact_discord: contactDiscord,
+      discord_user: document.getElementById('ob-discord').value.trim() || null,
+      instagram: document.getElementById('ob-instagram').value.trim() || null,
+      twitter: document.getElementById('ob-twitter').value.trim() || null,
+      tiktok: document.getElementById('ob-tiktok').value.trim() || null,
+      website: document.getElementById('ob-website').value.trim() || null,
+      is_open: true
+    };
+
+    // save artist (upsert in case they redo onboarding)
+    const { error: artistError } = await supa.from('artists').upsert(artistData);
+
+    if (artistError) {
+      console.error('Error guardando artista:', artistError);
+      alert('Hubo un problema al crear tu perfil. Inténtalo de nuevo.');
+      btn.disabled = false;
+      btn.textContent = 'Crear mi perfil →';
+      return;
+    }
+
+    // mark profile as artist
+    await supa.from('profiles').update({ is_artist: true }).eq('id', currentUser.id);
+
+    // create an empty commission form for them
+    await supa.from('commission_forms').upsert({
+      artist_id: currentUser.id,
+      fields: defaultFormFields()
+    });
+
+    // update local state
+    isArtist = true;
+    document.getElementById('udd-dash').style.display = 'flex';
+
+    btn.disabled = false;
+    btn.textContent = 'Crear mi perfil →';
+
+    // go to dashboard
+    go('dash');
+    buildFormFields();
+    buildRequests();
+  }
+
+  // default fields for a new artist's commission form
+  function defaultFormFields() {
+    return [
+      { type: 'Texto corto', label: 'Nombre de la carta',              req: true },
+      { type: 'Texto corto', label: 'Juego',                            req: true },
+      { type: 'Imagen',      label: 'Imagen de referencia',             req: false },
+      { type: 'Texto largo', label: 'Descripción del estilo que buscas', req: true },
+      { type: 'Fecha',       label: 'Fecha límite',                     req: false },
+      { type: 'Texto largo', label: 'Notas adicionales',                req: false }
+    ];
+  }
+
+  function pickContact(el) {
+    el.classList.toggle('on');
+    const on = el.parentElement.querySelectorAll('.contact-opt.on');
+    if (on.length === 0) el.classList.add('on');
+    const discordOn = el.parentElement.querySelector('.contact-opt[data-ch="discord"]').classList.contains('on');
+    document.getElementById('ob-discord-field').style.display = discordOn ? '' : 'none';
+  }
+
+  function pickContactSettings(el) {
+    el.classList.toggle('on');
+    const on = el.parentElement.querySelectorAll('.contact-opt.on');
+    if (on.length === 0) el.classList.add('on');
+    const discordOn = el.parentElement.querySelector('.contact-opt[data-ch="discord"]').classList.contains('on');
+    document.getElementById('set-discord-field').style.display = discordOn ? '' : 'none';
+  }
+
+  // ===== FORM BUILDER =====
+  function buildFormFields() {
+    document.getElementById('fb-fields').innerHTML = formFields.map((f,i) => `
+      <div class="fb-field">
+        <span class="fb-drag">⠿</span>
+        <span class="fb-field-type">${f.type}</span>
+        <span class="fb-field-label">${f.label}</span>
+        ${f.req ? '<span class="fb-field-req">*</span>' : ''}
+        <span class="fb-field-del" onclick="removeField(${i})">✕</span>
+      </div>
+    `).join('');
+  }
+
+  function addField(type) {
+    const label = prompt('Nombre del campo:');
+    if (!label) return;
+    formFields.push({ type, label, req: false });
+    buildFormFields();
+  }
+
+  function removeField(i) {
+    formFields.splice(i, 1);
+    buildFormFields();
+  }
+
+  // ===== DYNAMIC COMMISSION FORM =====
+  function buildDynamicForm() {
+    document.getElementById('dynamic-form').innerHTML = formFields.map(f => `
+      <div class="field">
+        <label class="field-label">${f.label} ${f.req ? '<span class="req">*</span>' : ''}</label>
+        ${f.type === 'Texto largo'
+          ? `<textarea class="txt" placeholder="${f.label}..."></textarea>`
+          : f.type === 'Imagen'
+          ? `<div class="upload"><div class="upload-ic">↑</div><div class="upload-tx">Sube imagen · JPG o PNG</div></div>`
+          : f.type === 'Fecha'
+          ? `<input class="inp" type="date">`
+          : f.type === 'Selección'
+          ? `<select class="sel"><option>Selecciona...</option><option>Magic</option><option>Pokémon</option><option>Lorcana</option><option>One Piece</option><option>Yu-Gi-Oh!</option></select>`
+          : `<input class="inp" type="text" placeholder="${f.label}...">`
+        }
+      </div>
+    `).join('');
+  }
+
+  async function submitForm() {
+    // Collect form data
+    const inputs = document.querySelectorAll('#page-form .inp, #page-form .txt');
+    const formData = {};
+    inputs.forEach((inp, i) => { formData[`campo_${i+1}`] = inp.value; });
+
+    const clientEmail = currentUser?.email || formData.campo_1 || '';
+    const clientName  = currentUser ? (document.getElementById('user-av')?.textContent || 'Cliente') : 'Visitante';
+
+    // Save to Supabase
+    const { error } = await supa.from('commissions').insert({
+      artist_id: null, // TODO: get from current profile page
+      client_id: currentUser?.id || null,
+      client_name: clientName,
+      client_email: clientEmail,
+      form_data: formData,
+      status: 'pending'
+    });
+
+    go('confirm');
+  }
+
+  // ===== REQUESTS =====
+  const requestsData = [
+    { title:'Alter full art de Liliana of the Veil', client:'@dragonlord_84', time:'Hace 2h',
+      preview:'Quiero un alter oscuro con temática lovecraftiana, tonos morados y negros, con tentáculos saliendo del fondo...', thumb:'a1' },
+    { title:'Token 1/1 soldado blanco', client:'@commander_fan', time:'Hace 5h',
+      preview:'Necesito un token para mi mazo de Commander. Me gustaría estilo anime, personaje femenino con armadura plateada...', thumb:'a5' },
+    { title:'Charizard alter acuarela', client:'@pokecollector99', time:'Ayer',
+      preview:'Busco un alter de mi Charizard holográfico de primera edición. Me gustaría algo muy especial, estilo acuarela...', thumb:'a3' },
+  ];
+
+  function buildRequests() {
+    document.getElementById('requests').innerHTML = requestsData.map((r,i) => `
+      <div class="request-card">
+        <div class="request-thumb ${r.thumb}"></div>
+        <div class="request-body">
+          <div class="request-top">
+            <div class="request-title">${r.title}</div>
+            <div class="request-time">${r.time}</div>
+          </div>
+          <div class="request-client">de ${r.client}</div>
+          <div class="request-preview">${r.preview}</div>
+          <div class="request-actions">
+            <button class="btn-sm btn-accept" onclick="acceptRequest(this)">✓ Aceptar</button>
+            <button class="btn-sm btn-decline" onclick="declineRequest(this)">Rechazar</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function acceptRequest(btn) {
+    const card = btn.closest('.request-card');
+    card.style.borderColor = 'rgba(63,174,106,0.4)';
+    card.querySelector('.request-actions').innerHTML = '<span style="font-size:0.78rem;color:var(--green)">✓ Aceptado — el cliente recibirá tu email</span>';
+  }
+  function declineRequest(btn) {
+    btn.closest('.request-card').style.opacity = '0.4';
+    btn.closest('.request-card').style.pointerEvents = 'none';
+  }
+
+  // ===== AVAILABILITY =====
+  let availOn = true;
+  function toggleAvail() {
+    availOn = !availOn;
+    document.getElementById('avail-sw').classList.toggle('on', availOn);
+    document.getElementById('avail-label').textContent = availOn ? 'Acepto encargos' : 'No acepto encargos';
+    document.getElementById('avail-desc').textContent  = availOn
+      ? 'Los compradores pueden enviarte solicitudes'
+      : 'Tu perfil sigue visible pero no recibirás solicitudes';
+  }
+
+  // ===== GAME DROPDOWN =====
+  let selectedGames = new Set(['all']);
+
+  function toggleGameDD() {
+    const btn = document.getElementById('game-dd-btn');
+    const menu = document.getElementById('game-dd-menu');
+    btn.classList.toggle('open');
+    menu.classList.toggle('open');
+  }
+
+  function selectGame(el) {
+    const game = el.dataset.game;
+    const logo = el.dataset.logo;
+    const ic = el.dataset.ic;
+
+    if (game === 'all') {
+      selectedGames.clear();
+      selectedGames.add('all');
+      document.querySelectorAll('.game-option').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+      document.getElementById('game-dd-logo').className = 'game-logo ' + logo;
+      document.getElementById('game-dd-logo').textContent = ic;
+      document.getElementById('game-dd-label').textContent = el.dataset.label;
+    } else {
+      selectedGames.delete('all');
+      document.querySelector('[data-game="all"]').classList.remove('selected');
+      el.classList.toggle('selected');
+      if (el.classList.contains('selected')) {
+        selectedGames.add(game);
+      } else {
+        selectedGames.delete(game);
+        if (selectedGames.size === 0) {
+          selectedGames.add('all');
+          document.querySelector('[data-game="all"]').classList.add('selected');
+        }
+      }
+      const sel = [...selectedGames];
+      if (sel.includes('all') || sel.length === 0) {
+        document.getElementById('game-dd-logo').className = 'game-logo gl-all';
+        document.getElementById('game-dd-logo').textContent = '✦';
+        document.getElementById('game-dd-label').textContent = 'Todos los juegos';
+      } else if (sel.length === 1) {
+        const o = document.querySelector('[data-game="' + sel[0] + '"]');
+        document.getElementById('game-dd-logo').className = 'game-logo ' + o.dataset.logo;
+        document.getElementById('game-dd-logo').textContent = o.dataset.ic;
+        document.getElementById('game-dd-label').textContent = o.dataset.label;
+      } else {
+        document.getElementById('game-dd-logo').className = 'game-logo gl-all';
+        document.getElementById('game-dd-logo').textContent = '✦';
+        document.getElementById('game-dd-label').textContent = sel.length + ' juegos';
+      }
+    }
+  }
+
+  // ===== FILTER POPUP =====
+  function openFilters() {
+    document.getElementById('filter-bg').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeFilters() {
+    document.getElementById('filter-bg').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function applyFilters() {
+    closeFilters();
+    renderTags();
+  }
+  function clearFilters() {
+    document.querySelectorAll('.popup-opt').forEach(o => o.classList.remove('on'));
+    document.querySelector('#order-opts .popup-opt').classList.add('on');
+    renderTags();
+  }
+  function selectOrder(btn) {
+    document.querySelectorAll('#order-opts .popup-opt').forEach(o => o.classList.remove('on'));
+    btn.classList.add('on');
+  }
+  function renderTags() {
+    const tags = [];
+    document.querySelectorAll('.popup-opt.on').forEach(o => {
+      if (o.closest('#order-opts')) return;
+      tags.push(o.textContent.trim());
+    });
+    const container = document.getElementById('active-filters');
+    container.innerHTML = tags.map(t => '<div class="filter-tag">' + t + '<span class="filter-tag-x" onclick="removeTag(\'' + t + '\')">✕</span></div>').join('');
+    container.classList.toggle('has-tags', tags.length > 0);
+    const count = document.getElementById('filter-count');
+    count.textContent = tags.length;
+    count.style.display = tags.length > 0 ? 'flex' : 'none';
+    document.getElementById('filter-btn').classList.toggle('active', tags.length > 0);
+  }
+  function removeTag(label) {
+    document.querySelectorAll('.popup-opt').forEach(o => {
+      if (o.textContent.trim() === label) o.classList.remove('on');
+    });
+    renderTags();
+  }
+
+  // ===== RATING MODAL =====
+  let ratingValue = 0;
+  const starHints = ['', 'Muy malo', 'Malo', 'Correcto', 'Bueno', 'Excelente'];
+
+  function openRating() {
+    document.getElementById('rating-modal').classList.add('open');
+    document.getElementById('rating-step-1').style.display = '';
+    document.getElementById('rating-step-2').style.display = 'none';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeRating() {
+    document.getElementById('rating-modal').classList.remove('open');
+    document.body.style.overflow = '';
+    ratingValue = 0;
+    document.querySelectorAll('#star-input .star').forEach(s => s.classList.remove('lit'));
+    document.getElementById('star-hint').textContent = 'Toca para puntuar';
+    document.getElementById('rating-text').value = '';
+    document.getElementById('rating-submit').disabled = true;
+  }
+  function setStars(v) {
+    ratingValue = v;
+    document.querySelectorAll('#star-input .star').forEach(s => {
+      s.classList.toggle('lit', parseInt(s.dataset.v) <= v);
+    });
+    document.getElementById('star-hint').textContent = starHints[v];
+    document.getElementById('rating-submit').disabled = false;
+  }
+  function submitRating() {
+    document.getElementById('rating-step-1').style.display = 'none';
+    document.getElementById('rating-step-2').style.display = '';
+  }
+
+  // ===== SPLASH SCREEN =====
+  (function() {
+    const splash = document.getElementById('splash');
+    if (sessionStorage.getItem('splash-seen')) {
+      splash.classList.add('hidden');
+      return;
+    }
+    sessionStorage.setItem('splash-seen', '1');
+    // fade out after 1.8s, remove after animation
+    setTimeout(() => {
+      splash.style.animation = 'splashFadeOut 0.9s ease forwards';
+      setTimeout(() => splash.classList.add('hidden'), 900);
+    }, 3000);
+  })();
+
+  // ===== FIRST VISIT BUBBLE =====
+  function dismissFirstVisit() {
+    document.getElementById('first-visit').classList.add('hidden');
+    sessionStorage.setItem('fv-seen', '1');
+  }
+  // hide if already seen this session
+  if (sessionStorage.getItem('fv-seen')) {
+    document.getElementById('first-visit').classList.add('hidden');
+  }
+
+  // ===== DONATE =====
+  function toggleDonate() {
+    const d = document.getElementById('donate');
+    const open = d.classList.toggle('open');
+    document.getElementById('donate-label').textContent = open ? 'Cerrar' : 'Apóyanos';
+  }
+  document.addEventListener('click', e => {
+    const d = document.getElementById('donate');
+    if (!d.contains(e.target) && d.classList.contains('open')) {
+      d.classList.remove('open');
+      document.getElementById('donate-label').textContent = 'Apóyanos';
+    }
+  });
+
+  // ===== EMPTY STATES =====
+  let savedFull = true;
+  function toggleSavedEmpty() {
+    savedFull = !savedFull;
+    document.getElementById('saved-wall').style.display  = savedFull ? '' : 'none';
+    document.getElementById('saved-empty').style.display = savedFull ? 'none' : '';
+  }
+
+  let profileOpen = true;
+  function toggleProfileAvail() {
+    profileOpen = !profileOpen;
+    const badge = document.getElementById('profile-avail-badge');
+    const label = document.getElementById('profile-avail-label');
+    const banner = document.getElementById('profile-closed-banner');
+    const btn = document.getElementById('profile-encargo-btn');
+    if (profileOpen) {
+      badge.className = 'avail-badge avail-open';
+      label.textContent = 'Acepta encargos';
+      banner.style.display = 'none';
+      btn.disabled = false;
+      btn.style.opacity = '';
+      btn.onclick = () => go('form');
+    } else {
+      badge.className = 'avail-badge avail-closed';
+      label.textContent = 'Encargos cerrados';
+      banner.style.display = 'flex';
+      btn.disabled = true;
+      btn.style.opacity = '0.35';
+      btn.onclick = null;
+    }
+  }
+
+  // ===== INIT =====
+  // Load muro on startup
+  loadMuro();
+  buildWall('profile-wall', demoPins.slice(0,9));
+  buildWall('saved-wall', demoPins.slice(2,8));
+  buildFormFields();
+  buildDynamicForm();
+  buildRequests();
+
+  // ===== ARTIST MODE TOGGLE (settings) =====
+  function toggleArtistMode() {
+    const sw = document.getElementById('am-switch');
+    const on = sw.classList.toggle('on');
+    document.getElementById('am-label').textContent = on ? 'Modo artista activado' : 'Modo artista desactivado';
+    document.getElementById('am-desc').textContent  = on
+      ? 'Tu perfil de artista está activo'
+      : 'Actívalo para crear tu perfil y recibir encargos';
+    document.getElementById('settings-artist-block').style.display = on ? '' : 'none';
+    if (on) {
+      isArtist = true;
+      document.getElementById('udd-dash').style.display = 'flex';
+      setTimeout(() => go('onboard'), 250);
+    } else {
+      isArtist = false;
+      document.getElementById('udd-dash').style.display = 'none';
+    }
+  }
+</script>
+</body>
+</html>
