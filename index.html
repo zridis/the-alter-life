@@ -1326,7 +1326,7 @@
           <div class="av" style="width:38px;height:38px">🎨</div>
           <div>
             <div class="user-dd-name">Tu cuenta</div>
-            <div class="user-dd-email">tucorreo@email.com</div>
+            <div class="user-dd-email" id="user-dd-email">tucorreo@email.com</div>
           </div>
         </div>
         <div class="user-dd-item" id="udd-dash" onclick="closeUserMenu();go('dash')" style="display:none">
@@ -1985,15 +1985,15 @@
     <div class="form-section-label">Tu cuenta</div>
     <div class="field">
       <label class="field-label">Nombre</label>
-      <input class="inp" type="text" value="Tu nombre">
+      <input class="inp" type="text" id="set-name" value="Tu nombre">
     </div>
     <div class="field">
       <label class="field-label">Email</label>
-      <input class="inp" type="email" value="tucorreo@email.com">
+      <input class="inp" type="email" id="set-email" value="tucorreo@email.com" readonly>
     </div>
     <div class="field">
       <label class="field-label">País</label>
-      <select class="sel">
+      <select class="sel" id="set-country">
         <option>España</option><option>México</option><option>Argentina</option>
         <option>Colombia</option><option>Chile</option><option>Otro</option>
       </select>
@@ -2425,7 +2425,29 @@
     const { data: profile } = await supa.from('profiles').select('*').eq('id', userId).single();
     const { data: artist }  = await supa.from('artists').select('id').eq('id', userId).single();
     isArtist = !!artist;
-    showLoggedIn(profile?.username || currentUser?.email?.split('@')[0] || 'Tú');
+
+    const name  = profile?.username || currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'Tú';
+    const email = currentUser?.email || '';
+
+    // topbar avatar
+    showLoggedIn(name);
+
+    // user dropdown
+    const ddEmail = document.getElementById('user-dd-email');
+    if (ddEmail) ddEmail.textContent = email;
+
+    // settings fields
+    const setName = document.getElementById('set-name');
+    if (setName) setName.value = name;
+    const setEmail = document.getElementById('set-email');
+    if (setEmail) setEmail.value = email;
+    if (profile?.country) {
+      const setCountry = document.getElementById('set-country');
+      if (setCountry) {
+        [...setCountry.options].forEach(o => { if (o.text === profile.country) o.selected = true; });
+      }
+    }
+
     if (isArtist) document.getElementById('udd-dash').style.display = 'flex';
     loadMuro();
   }
@@ -2476,22 +2498,31 @@
     setAuthLoading(true);
 
     if (isRegister) {
-      const { error } = await supa.auth.signUp({
+      const { data, error } = await supa.auth.signUp({
         email, password,
         options: { data: { display_name: name || email.split('@')[0] } }
       });
       if (error) { showAuthError(error.message); setAuthLoading(false); return; }
-      // Save extra profile data
-      const { data: { user } } = await supa.auth.getUser();
+      const user = data?.user;
       if (user) {
         await supa.from('profiles').upsert({ id: user.id, email, username: name || email.split('@')[0] });
+        setAuthLoading(false);
         if (isArtist) { go('onboard'); } else { go('home'); }
+      } else {
+        // email confirmation required
+        showAuthError('Revisa tu email para confirmar la cuenta.');
+        setAuthLoading(false);
       }
     } else {
-      const { error } = await supa.auth.signInWithPassword({ email, password });
+      const { data, error } = await supa.auth.signInWithPassword({ email, password });
       if (error) { showAuthError('Email o contraseña incorrectos.'); setAuthLoading(false); return; }
+      const user = data?.user;
+      setAuthLoading(false);
+      if (user) {
+        await loadUserProfile(user.id);
+        go('home');
+      }
     }
-    setAuthLoading(false);
   }
 
   function setAuthLoading(loading) {
