@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Alter Life</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2601,7 +2602,7 @@
     // create an empty commission form for them
     await supa.from('commission_forms').upsert({
       artist_id: currentUser.id,
-      fields: defaultFormFields()
+      fields: [...defaultFormFields]
     });
 
     // update local state
@@ -2615,18 +2616,6 @@
     go('dash');
     buildFormFields();
     buildRequests();
-  }
-
-  // default fields for a new artist's commission form
-  function defaultFormFields() {
-    return [
-      { type: 'Texto corto', label: 'Nombre de la carta',              req: true },
-      { type: 'Texto corto', label: 'Juego',                            req: true },
-      { type: 'Imagen',      label: 'Imagen de referencia',             req: false },
-      { type: 'Texto largo', label: 'Descripción del estilo que buscas', req: true },
-      { type: 'Fecha',       label: 'Fecha límite',                     req: false },
-      { type: 'Texto largo', label: 'Notas adicionales',                req: false }
-    ];
   }
 
   function pickContact(el) {
