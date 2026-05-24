@@ -999,7 +999,9 @@
     z-index: 80;
     display: flex; flex-direction: column-reverse;
     align-items: flex-end; gap: 0.5rem;
+    transition: opacity 0.5s ease;
   }
+  .donate.fv-hidden { opacity: 0; pointer-events: none; }
   .donate-toggle {
     display: flex; align-items: center; gap: 0.55rem;
     font-size: 0.92rem; font-weight: 600;
@@ -1078,46 +1080,59 @@
   .first-visit {
     position: fixed; bottom: 5.5rem; left: 1.3rem;
     z-index: 79;
-    width: 240px;
+    width: 300px;
     background: var(--bg-soft);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    box-shadow: 0 8px 28px rgba(0,0,0,0.5);
-    animation: fadeUp 0.4s ease 1.5s both;
+    border: 1px solid rgba(240,145,58,0.3);
+    border-radius: 16px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.5), 0 0 28px rgba(224,99,58,0.25);
+    animation: fadeUp 0.4s ease 1.5s both, fvGlow 3s ease-in-out 2s infinite;
     overflow: hidden;
+  }
+  @keyframes fvGlow {
+    0%, 100% { box-shadow: 0 8px 28px rgba(0,0,0,0.5), 0 0 22px rgba(224,99,58,0.2); }
+    50%       { box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 40px rgba(240,145,58,0.45); }
   }
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(12px); }
     to   { opacity: 1; transform: translateY(0); }
   }
-  .first-visit.hidden { display: none; }
+  .first-visit { transition: opacity 0.4s ease; }
+  .first-visit.hidden { opacity: 0; pointer-events: none; visibility: hidden; }
   .fv-close {
-    position: absolute; top: 0.6rem; right: 0.6rem;
-    width: 20px; height: 20px; border-radius: 50%;
+    position: absolute; top: 0.7rem; right: 0.7rem;
+    width: 22px; height: 22px; border-radius: 50%;
     background: var(--surface); border: none;
     color: var(--text-mute); font-size: 0.65rem;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; transition: color 0.12s;
   }
   .fv-close:hover { color: var(--text); }
-  .fv-body { padding: 1rem 1rem 0.9rem; }
+  .fv-body { padding: 1.2rem 1.2rem 1.1rem; }
   .fv-title {
     font-family: 'Fraunces', serif;
-    font-size: 0.95rem; font-weight: 600;
-    margin-bottom: 0.35rem; padding-right: 1rem;
+    font-size: 1.05rem; font-weight: 600;
+    margin-bottom: 0.4rem; padding-right: 1.2rem;
   }
   .fv-text {
-    font-size: 0.78rem; color: var(--text-mute);
-    line-height: 1.5; margin-bottom: 0.75rem;
+    font-size: 0.82rem; color: var(--text-mute);
+    line-height: 1.55; margin-bottom: 0.9rem;
   }
   .fv-btn {
-    font-size: 0.78rem; font-weight: 600;
-    color: var(--bg); background: var(--white);
+    font-size: 0.8rem; font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #f0913a 0%, #e0633a 100%);
     border: none; border-radius: 999px;
-    padding: 0.42rem 0.9rem; cursor: pointer;
+    padding: 0.5rem 1.1rem; cursor: pointer;
     transition: opacity 0.15s;
   }
-  .fv-btn:hover { opacity: 0.85; }
+  .fv-btn:hover { opacity: 0.88; }
+
+  /* mobile — keep it compact */
+  @media (max-width: 640px) {
+    .first-visit { width: 210px; bottom: 4.5rem; left: 1rem; }
+    .fv-title { font-size: 0.9rem; }
+    .fv-text  { font-size: 0.76rem; }
+  }
 
   @keyframes pulse {
     0%, 100% { opacity: 0.4; }
@@ -1478,39 +1493,39 @@
 <!-- ===== ARTIST PROFILE ===== -->
 <div class="page" id="page-profile">
   <div class="profile-top">
-    <div class="profile-av-lg">🎨</div>
+    <div class="profile-av-lg" id="profile-av">🎨</div>
     <div class="profile-info">
-      <div class="profile-name">Seraphic Arts</div>
-      <div class="avail-badge avail-open" id="profile-avail-badge" onclick="toggleProfileAvail()" style="cursor:pointer" title="Demo: cambiar estado">
+      <div class="profile-name" id="profile-name">Seraphic Arts</div>
+      <div class="avail-badge avail-open" id="profile-avail-badge" style="cursor:default">
         <span class="avail-dot"></span>
         <span id="profile-avail-label">Acepta encargos</span>
       </div>
-      <div class="profile-bio">Alters en acuarela y digital. Magic & Pokémon. Cada carta, una pieza única pintada a mano desde Madrid.</div>
-      <div class="profile-tags">
+      <div class="profile-bio" id="profile-bio">Alters en acuarela y digital. Magic & Pokémon. Cada carta, una pieza única pintada a mano desde Madrid.</div>
+      <div class="profile-tags" id="profile-tags">
         <span class="profile-tag">Magic</span>
         <span class="profile-tag">Pokémon</span>
         <span class="profile-tag">Acuarela</span>
         <span class="profile-tag">Digital</span>
       </div>
       <div class="profile-meta">
-        <span><b>248</b> obras</span>
-        <span><b>4.9 ★</b> valoración</span>
-        <span><b>312</b> encargos</span>
+        <span><b id="profile-count-obras">—</b> obras</span>
+        <span><b id="profile-rating">—</b> ★ valoración</span>
+        <span><b id="profile-count-encargos">—</b> encargos</span>
       </div>
     </div>
     <div class="profile-cta">
       <button class="btn-pill btn-light" id="profile-encargo-btn" onclick="go('form')">Solicitar encargo</button>
-      <div class="social-links">
-        <a class="social-link" href="#" target="_blank" title="Instagram">
+      <div class="social-links" id="profile-social-links">
+        <a class="social-link" id="sl-instagram" href="#" target="_blank" title="Instagram" style="display:none">
           <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 3.25.15 4.77 1.69 4.92 4.92.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.15 3.23-1.66 4.77-4.92 4.92-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-3.26-.15-4.77-1.7-4.92-4.92-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85C2.38 3.92 3.9 2.38 7.15 2.23 8.42 2.17 8.8 2.16 12 2.16zm0 3.68a6.16 6.16 0 100 12.32 6.16 6.16 0 000-12.32zM12 16a4 4 0 110-8 4 4 0 010 8zm6.4-10.45a1.44 1.44 0 100 2.88 1.44 1.44 0 000-2.88z"/></svg>
         </a>
-        <a class="social-link" href="#" target="_blank" title="X / Twitter">
+        <a class="social-link" id="sl-twitter" href="#" target="_blank" title="X / Twitter" style="display:none">
           <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.41l-5.8-7.58-6.64 7.58H.46l8.6-9.83L0 1.15h7.6l5.24 6.93 6.06-6.93zm-1.29 19.5h2.04L6.48 3.24H4.3L17.61 20.65z"/></svg>
         </a>
-        <a class="social-link" href="#" target="_blank" title="TikTok">
+        <a class="social-link" id="sl-tiktok" href="#" target="_blank" title="TikTok" style="display:none">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M16.6 5.82a4.28 4.28 0 01-1.06-2.82h-3.3v13.2a2.59 2.59 0 01-2.58 2.5 2.59 2.59 0 01-2.58-2.59A2.59 2.59 0 019.9 13.7v-3.36a5.89 5.89 0 105.06 5.83V9.01a7.57 7.57 0 004.4 1.41V7.1a4.28 4.28 0 01-2.76-1.28z"/></svg>
         </a>
-        <a class="social-link" href="#" target="_blank" title="Sitio web / tienda">
+        <a class="social-link" id="sl-website" href="#" target="_blank" title="Sitio web / tienda" style="display:none">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg>
         </a>
       </div>
@@ -1549,11 +1564,11 @@
     <div class="reviews-head">
       <div>
         <div class="reviews-title">Valoraciones</div>
-        <div class="reviews-sub"><b>4.9</b> de 5 · 312 encargos completados</div>
+        <div class="reviews-sub" id="profile-reviews-sub"><b>—</b> de 5</div>
       </div>
       <button class="btn-pill btn-ghost" onclick="openRating()">Valorar a este artista</button>
     </div>
-    <div class="reviews-list">
+    <div class="reviews-list" id="profile-reviews-list">
       <div class="review">
         <div class="review-top">
           <div class="review-author">
@@ -1581,6 +1596,24 @@
         <div class="review-text">Muy profesional. Los tiempos que me dijo se cumplieron y el token quedó espectacular.</div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ===== EMAIL CONFIRM ===== -->
+<div class="page" id="page-confirm">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;padding:2rem;text-align:center;max-width:420px;margin:0 auto">
+    <div style="font-size:3rem;margin-bottom:1.2rem">📬</div>
+    <h1 style="font-family:'Fraunces',serif;font-size:1.8rem;font-weight:600;margin-bottom:0.6rem">Revisa tu email</h1>
+    <p style="font-size:0.9rem;color:var(--text-mute);line-height:1.6;margin-bottom:0.5rem">
+      Te hemos enviado un enlace de confirmación a
+    </p>
+    <p style="font-size:0.95rem;font-weight:600;color:var(--text);margin-bottom:1.6rem" id="confirm-email">—</p>
+    <p style="font-size:0.82rem;color:var(--text-mute);line-height:1.6;margin-bottom:2rem">
+      Haz clic en el enlace del email para activar tu cuenta. Si no lo encuentras, revisa la carpeta de spam.
+    </p>
+    <button class="btn-pill btn-light" style="margin-bottom:0.8rem;width:100%;max-width:280px" onclick="resendConfirmEmail()">Reenviar email</button>
+    <p class="fnote" id="confirm-resend-msg" style="display:none;color:var(--green)">Email reenviado. Revisa tu bandeja.</p>
+    <button class="btn-pill btn-ghost" style="margin-top:0.8rem" onclick="go('home')">Explorar obras mientras espero →</button>
   </div>
 </div>
 
@@ -1764,7 +1797,7 @@
   <div class="dash-wrap">
     <div class="dash-head">
       <div class="dash-title">Mi panel</div>
-      <button class="btn-pill btn-ghost" onclick="go('profile')">Ver mi perfil público →</button>
+      <button class="btn-pill btn-ghost" onclick="currentUser && openProfile(currentUser.id)">Ver mi perfil público →</button>
     </div>
 
     <!-- stats -->
@@ -2133,7 +2166,7 @@
       <div class="modal-title" id="m-title">—</div>
       <div class="modal-game" id="m-game">—</div>
       <div class="modal-state" id="m-state"></div>
-      <div class="modal-artist-row" onclick="closeModal();go('profile')">
+      <div class="modal-artist-row" id="modal-artist-row" onclick="closeModal();openProfile(currentModalArtistId)">
         <div class="modal-av">🎨</div>
         <div>
           <div class="modal-artist-name" id="m-artist">—</div>
@@ -2144,7 +2177,7 @@
       <div class="modal-price" id="m-price"></div>
       <div class="modal-actions">
         <button class="btn-block primary" id="m-cta" onclick="closeModal();go('form')">Solicitar encargo similar</button>
-        <button class="btn-block secondary" onclick="closeModal();go('profile')">Ver más obras de este artista</button>
+        <button class="btn-block secondary" onclick="closeModal();openProfile(currentModalArtistId)">Ver más obras de este artista</button>
       </div>
     </div>
   </div>
@@ -2342,9 +2375,12 @@
   }
 
   // ===== MODAL =====
+  let currentModalArtistId = null;
+
   function openModal(i) {
     const p = allArtworks[i];
     if (!p) return;
+    currentModalArtistId = p.artist_id || null;
     const img = document.getElementById('m-img');
     if (p.image_url) {
       img.innerHTML = `<img src="${p.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">`;
@@ -2421,7 +2457,7 @@
     }
   });
 
-  async function loadUserProfile(userId) {
+  async function loadUserProfile(userId, redirectAfter) {
     const { data: profile } = await supa.from('profiles').select('*').eq('id', userId).single();
     const { data: artist }  = await supa.from('artists').select('id').eq('id', userId).single();
     isArtist = !!artist;
@@ -2450,6 +2486,13 @@
 
     if (isArtist) document.getElementById('udd-dash').style.display = 'flex';
     loadMuro();
+
+    // navigate after profile is fully loaded
+    if (redirectAfter === 'onboard') {
+      go('onboard');
+    } else if (redirectAfter === 'home') {
+      go('home');
+    }
   }
 
   function authMode(mode) {
@@ -2504,13 +2547,21 @@
       });
       if (error) { showAuthError(error.message); setAuthLoading(false); return; }
       const user = data?.user;
+      const session = data?.session;
       if (user) {
         await supa.from('profiles').upsert({ id: user.id, email, username: name || email.split('@')[0] });
         setAuthLoading(false);
-        if (isArtist) { go('onboard'); } else { go('home'); }
+        if (session) {
+          // email confirmation off — log in directly
+          currentUser = user;
+          await loadUserProfile(user.id, isArtist ? 'onboard' : 'home');
+        } else {
+          // email confirmation on — show confirm screen
+          document.getElementById('confirm-email').textContent = email;
+          go('confirm');
+        }
       } else {
-        // email confirmation required
-        showAuthError('Revisa tu email para confirmar la cuenta.');
+        showAuthError('No se pudo crear la cuenta. Inténtalo de nuevo.');
         setAuthLoading(false);
       }
     } else {
@@ -2519,8 +2570,8 @@
       const user = data?.user;
       setAuthLoading(false);
       if (user) {
-        await loadUserProfile(user.id);
-        go('home');
+        currentUser = user;
+        await loadUserProfile(user.id, 'home');
       }
     }
   }
@@ -2561,6 +2612,286 @@
   function closeUserMenu() {
     document.getElementById('user-dropdown').classList.remove('open');
   }
+  // ===== PERFIL DE ARTISTA (Supabase) =====
+  let currentProfileId = null;
+
+  async function openProfile(artistId) {
+    currentProfileId = artistId;
+    go('profile');
+    await loadProfile(artistId);
+  }
+
+  async function loadProfile(artistId) {
+    // load artist data
+    const { data: artist } = await supa
+      .from('artists')
+      .select('*')
+      .eq('id', artistId)
+      .single();
+
+    if (!artist) return;
+
+    // basic info
+    document.getElementById('profile-name').textContent = artist.display_name || '—';
+    document.getElementById('profile-bio').textContent  = artist.bio || '';
+    document.getElementById('profile-av').textContent   = (artist.display_name || '?')[0].toUpperCase();
+
+    // availability
+    const badge = document.getElementById('profile-avail-badge');
+    const label = document.getElementById('profile-avail-label');
+    const btn   = document.getElementById('profile-encargo-btn');
+    const banner = document.getElementById('profile-closed-banner');
+    if (artist.is_open) {
+      badge.className = 'avail-badge avail-open';
+      label.textContent = 'Acepta encargos';
+      btn.disabled = false;
+      if (banner) banner.style.display = 'none';
+    } else {
+      badge.className = 'avail-badge avail-closed';
+      label.textContent = 'Encargos cerrados';
+      btn.disabled = true;
+      if (banner) banner.style.display = 'flex';
+    }
+
+    // tags (games + techniques)
+    const tags = [...(artist.games || []), ...(artist.techniques || [])];
+    document.getElementById('profile-tags').innerHTML = tags
+      .map(t => `<span class="profile-tag">${t}</span>`).join('');
+
+    // stats
+    document.getElementById('profile-rating').textContent =
+      artist.avg_rating ? Number(artist.avg_rating).toFixed(1) : '—';
+    document.getElementById('profile-count-encargos').textContent =
+      artist.total_commissions || 0;
+
+    // social links
+    const socials = [
+      { id: 'sl-instagram', url: artist.instagram, prefix: 'https://instagram.com/' },
+      { id: 'sl-twitter',   url: artist.twitter,   prefix: 'https://x.com/' },
+      { id: 'sl-tiktok',    url: artist.tiktok,    prefix: 'https://tiktok.com/@' },
+      { id: 'sl-website',   url: artist.website,   prefix: '' }
+    ];
+    socials.forEach(({ id, url, prefix }) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (url) {
+        const href = url.startsWith('http') ? url : prefix + url.replace('@','');
+        el.href = href;
+        el.style.display = 'flex';
+      } else {
+        el.style.display = 'none';
+      }
+    });
+
+    // load artworks
+    const { data: artworks } = await supa
+      .from('artworks')
+      .select('*')
+      .eq('artist_id', artistId)
+      .order('created_at', { ascending: false });
+
+    document.getElementById('profile-count-obras').textContent = artworks?.length || 0;
+
+    const wall = document.getElementById('profile-wall');
+    const empty = document.getElementById('profile-wall-empty');
+    if (!artworks || artworks.length === 0) {
+      wall.innerHTML = '';
+      if (empty) empty.style.display = 'block';
+    } else {
+      if (empty) empty.style.display = 'none';
+      wall.innerHTML = artworks.map((p, i) => `
+        <div class="pin">
+          <div class="pin-card">
+            ${p.image_url
+              ? `<img src="${p.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:14px 14px 0 0" loading="lazy">`
+              : `<div class="pin-art a${(i%10)+1}" style="width:100%;height:100%"></div>`}
+            <div class="pin-badge ${stateCls[p.status] || 'badge-folio'}">${stateLabel[p.status] || 'Portfolio'}</div>
+          </div>
+          <div class="pin-meta">
+            <div class="pin-title">${p.title}</div>
+            <div class="pin-sub">${p.game || ''}</div>
+            ${p.price ? `<div class="pin-price">${p.price}€</div>` : ''}
+          </div>
+        </div>`).join('');
+    }
+
+    // load reviews
+    const { data: reviews } = await supa
+      .from('reviews')
+      .select('*')
+      .eq('artist_id', artistId)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    const reviewsSub = document.getElementById('profile-reviews-sub');
+    if (reviewsSub) {
+      reviewsSub.innerHTML = artist.avg_rating
+        ? `<b>${Number(artist.avg_rating).toFixed(1)}</b> de 5 · ${artist.total_commissions || 0} valoraciones`
+        : 'Sin valoraciones aún';
+    }
+
+    const reviewsList = document.getElementById('profile-reviews-list');
+    if (reviewsList) {
+      if (!reviews || reviews.length === 0) {
+        reviewsList.innerHTML = `<div style="font-size:0.84rem;color:var(--text-mute);padding:1rem 0">Aún no hay valoraciones.</div>`;
+      } else {
+        reviewsList.innerHTML = reviews.map(r => `
+          <div class="review">
+            <div class="review-top">
+              <div class="review-author">
+                <div class="review-av">${(r.reviewer_name || '?')[0].toUpperCase()}</div>
+                <div>
+                  <div class="review-name">${r.reviewer_name || 'Anónimo'}</div>
+                  <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
+                </div>
+              </div>
+              <div class="review-date">${timeAgo(r.created_at)}</div>
+            </div>
+            ${r.comment ? `<div class="review-text">${r.comment}</div>` : ''}
+          </div>`).join('');
+      }
+    }
+  }
+
+  function timeAgo(dateStr) {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const days = Math.floor(diff / 86400000);
+    if (days === 0) return 'Hoy';
+    if (days === 1) return 'Ayer';
+    if (days < 7)  return `Hace ${days} días`;
+    if (days < 30) return `Hace ${Math.floor(days/7)} semanas`;
+    if (days < 365) return `Hace ${Math.floor(days/30)} meses`;
+    return `Hace ${Math.floor(days/365)} años`;
+  }
+
+  // ===== SUBIR OBRA =====
+  let selectedArtworkFile = null;
+
+  // Reescala la imagen a máximo 1400px y la convierte a JPEG 82%
+  // Una foto de móvil de 8MB queda en ~300-400KB
+  function resizeImage(file, maxWidth, quality) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let w = img.width;
+        let h = img.height;
+        if (w > maxWidth) {
+          h = Math.round(h * maxWidth / w);
+          w = maxWidth;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width  = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => resolve(blob), 'image/jpeg', quality);
+      };
+      img.src = url;
+    });
+  }
+
+  function previewArtwork(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+
+    const uploadTx = document.getElementById('aw-upload-tx');
+    const preview  = document.getElementById('aw-preview');
+    uploadTx.textContent = 'Optimizando imagen...';
+
+    resizeImage(file, 1400, 0.82).then(blob => {
+      // keep original name but mark as jpeg
+      selectedArtworkFile = new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' });
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+      };
+      reader.readAsDataURL(selectedArtworkFile);
+
+      const originalKB  = Math.round(file.size / 1024);
+      const optimizedKB = Math.round(blob.size / 1024);
+      uploadTx.textContent = `${file.name} · ${originalKB}KB → ${optimizedKB}KB`;
+    });
+  }
+
+  async function publishArtwork() {
+    if (!currentUser) {
+      alert('Debes iniciar sesión.');
+      return;
+    }
+    const title  = document.getElementById('aw-title').value.trim();
+    const game   = document.getElementById('aw-game').value;
+    const status = document.getElementById('aw-status').value;
+    const priceRaw = document.getElementById('aw-price').value.trim();
+    const btn = document.getElementById('aw-publish-btn');
+    const msg = document.getElementById('aw-publish-msg');
+
+    if (!title) { alert('El título es obligatorio.'); return; }
+    if (!selectedArtworkFile) { alert('Elige una imagen de la obra.'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Publicando...';
+
+    // 1. subir imagen optimizada a storage (siempre JPEG tras el resize)
+    const path = currentUser.id + '/' + Date.now() + '.jpg';
+    const { error: upErr } = await supa.storage.from('artworks').upload(path, selectedArtworkFile, {
+      contentType: 'image/jpeg'
+    });
+
+    if (upErr) {
+      console.error('Error subiendo imagen:', upErr);
+      alert('No se pudo subir la imagen. Inténtalo de nuevo.');
+      btn.disabled = false;
+      btn.textContent = 'Publicar obra';
+      return;
+    }
+
+    // 2. get public URL
+    const { data: urlData } = supa.storage.from('artworks').getPublicUrl(path);
+    const imageUrl = urlData.publicUrl;
+
+    // 3. parse price
+    let price = null;
+    if (status === 'for_sale' && priceRaw) {
+      price = parseFloat(priceRaw.replace(/[^0-9.,]/g, '').replace(',', '.'));
+      if (isNaN(price)) price = null;
+    }
+
+    // 4. insert artwork row
+    const { error: insErr } = await supa.from('artworks').insert({
+      artist_id: currentUser.id,
+      title: title,
+      game: game,
+      status: status,
+      price: price,
+      image_url: imageUrl
+    });
+
+    btn.disabled = false;
+    btn.textContent = 'Publicar obra';
+
+    if (insErr) {
+      console.error('Error guardando obra:', insErr);
+      alert('La imagen se subió pero no se pudo guardar la obra. Inténtalo de nuevo.');
+      return;
+    }
+
+    // success — reset form
+    document.getElementById('aw-title').value = '';
+    document.getElementById('aw-price').value = '';
+    document.getElementById('aw-preview').style.display = 'none';
+    document.getElementById('aw-upload-tx').textContent = 'Toca para elegir imagen · JPG o PNG';
+    selectedArtworkFile = null;
+    msg.style.display = 'block';
+    msg.textContent = '✓ Obra publicada. Ya aparece en el muro.';
+    msg.style.color = 'var(--green)';
+
+    // refresh the wall
+    loadMuro();
+  }
+
   async function logout() {
     closeUserMenu();
     await supa.auth.signOut();
@@ -2882,6 +3213,21 @@
     renderTags();
   }
 
+  async function resendConfirmEmail() {
+    const email = document.getElementById('confirm-email').textContent;
+    if (!email || email === '—') return;
+    const { error } = await supa.auth.resend({ type: 'signup', email });
+    const msg = document.getElementById('confirm-resend-msg');
+    msg.style.display = 'block';
+    if (error) {
+      msg.textContent = 'No se pudo reenviar. Inténtalo en unos minutos.';
+      msg.style.color = 'var(--red)';
+    } else {
+      msg.textContent = 'Email reenviado. Revisa tu bandeja.';
+      msg.style.color = 'var(--green)';
+    }
+  }
+
   // ===== RATING MODAL =====
   let ratingValue = 0;
   const starHints = ['', 'Muy malo', 'Malo', 'Correcto', 'Bueno', 'Excelente'];
@@ -2931,12 +3277,23 @@
 
   // ===== FIRST VISIT BUBBLE =====
   function dismissFirstVisit() {
-    document.getElementById('first-visit').classList.add('hidden');
+    const fv = document.getElementById('first-visit');
+    const donate = document.getElementById('donate');
+    fv.classList.add('hidden');
     sessionStorage.setItem('fv-seen', '1');
+    // reveal donate after bubble fades out
+    setTimeout(() => {
+      donate.classList.remove('fv-hidden');
+    }, 420);
   }
-  // hide if already seen this session
+
+  // on load: if bubble is showing, hide donate until dismissed
   if (sessionStorage.getItem('fv-seen')) {
     document.getElementById('first-visit').classList.add('hidden');
+    // bubble already seen — donate visible from start
+  } else {
+    // first visit — hide donate until bubble is closed
+    document.getElementById('donate').classList.add('fv-hidden');
   }
 
   // ===== DONATE =====
