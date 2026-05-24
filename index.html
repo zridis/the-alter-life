@@ -726,6 +726,64 @@
   .toggle-switch.on::after { transform: translateX(18px); }
 
   /* requests / inbox */
+  .dash-tabs {
+    display: flex; gap: 0.4rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+  .dash-tab {
+    padding: 0.55rem 1.1rem;
+    font-size: 0.84rem; font-weight: 500;
+    background: none; border: none;
+    color: var(--text-mute); cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .dash-tab:hover { color: var(--text); }
+  .dash-tab.active { color: var(--text); border-bottom-color: var(--text); }
+
+  .my-aw-item {
+    display: flex; align-items: center; gap: 0.9rem;
+    padding: 0.7rem 0.8rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
+  }
+  .my-aw-thumb {
+    width: 48px; height: 48px; border-radius: 7px;
+    object-fit: cover; flex-shrink: 0;
+    background: var(--bg-soft);
+  }
+  .my-aw-info { flex: 1; min-width: 0; }
+  .my-aw-title {
+    font-size: 0.88rem; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .my-aw-meta { font-size: 0.76rem; color: var(--text-mute); margin-top: 0.15rem; }
+  .my-aw-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+  .my-aw-btn {
+    font-size: 0.74rem; padding: 0.3rem 0.65rem;
+    border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg-soft); color: var(--text-mute);
+    cursor: pointer; transition: all 0.12s;
+  }
+  .my-aw-btn:hover { color: var(--text); border-color: var(--text-mute); }
+  .my-aw-btn.danger:hover { color: var(--red, #e05555); border-color: var(--red, #e05555); }
+
+  /* edit overlay */
+  .my-aw-edit {
+    display: none;
+    padding: 0.7rem 0.8rem 0.8rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-top: none; border-radius: 0 0 10px 10px;
+    margin-top: -0.5rem; margin-bottom: 0.5rem;
+    gap: 0.6rem;
+  }
+  .my-aw-edit.open { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem; }
+
   .dash-section-title {
     font-size: 0.88rem; font-weight: 600;
     color: var(--text-dim); margin-bottom: 0.9rem;
@@ -1825,6 +1883,15 @@
       <div class="toggle-switch on" id="avail-sw"></div>
     </div>
 
+    <!-- mis obras -->
+    <div class="dash-section-title" style="margin-top:2rem">
+      Mis obras
+      <span class="dash-badge" id="my-artworks-count" style="display:none"></span>
+    </div>
+    <div id="my-artworks-list">
+      <div style="font-size:0.82rem;color:var(--text-mute);padding:0.5rem 0">Cargando tus obras...</div>
+    </div>
+
     <!-- solicitudes -->
     <div class="dash-section-title">
       Solicitudes de encargo
@@ -1832,65 +1899,74 @@
     </div>
     <div id="requests"></div>
 
-    <!-- form builder -->
-    <div class="dash-section-title" style="margin-top:2rem">Formulario de encargo</div>
-    <p style="font-size:0.82rem;color:var(--text-mute);margin-bottom:1rem;line-height:1.5">
-      Personaliza qué información pides a quien quiera encargarte algo. Arrastra para reordenar.
-    </p>
-    <div class="form-builder">
-      <div class="fb-header">
-        <div>
-          <div class="fb-title">Tu formulario de encargo</div>
-          <div class="fb-subtitle">Los campos marcados con * son obligatorios</div>
+    <!-- pestañas: subir obra / formulario -->
+    <div class="dash-tabs" style="margin-top:2rem">
+      <button class="dash-tab active" id="dtab-obra" onclick="switchDashTab('obra')">Subir obra</button>
+      <button class="dash-tab" id="dtab-form" onclick="switchDashTab('form')">Formulario de encargo</button>
+    </div>
+
+    <!-- panel: subir obra -->
+    <div id="dtab-panel-obra" style="padding-top:1.4rem">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:0.8rem">
+        <div class="field">
+          <label class="field-label">Carta / título <span class="req">*</span></label>
+          <input class="inp" type="text" id="aw-title" placeholder="Ej: Liliana of the Veil">
         </div>
-        <button class="btn-sm btn-read" onclick="go('form')">Vista previa →</button>
+        <div class="field">
+          <label class="field-label">Juego <span class="req">*</span></label>
+          <select class="sel" id="aw-game">
+            <option>Magic</option><option>Pokémon</option><option>Lorcana</option><option>One Piece</option><option>Yu-Gi-Oh!</option>
+          </select>
+        </div>
       </div>
-      <div class="fb-fields" id="fb-fields"></div>
-      <div class="fb-add">
-        <button class="fb-add-btn" onclick="addField('Texto corto')">+ Texto corto</button>
-        <button class="fb-add-btn" onclick="addField('Texto largo')">+ Texto largo</button>
-        <button class="fb-add-btn" onclick="addField('Imagen')">+ Subir imagen</button>
-        <button class="fb-add-btn" onclick="addField('Fecha')">+ Fecha</button>
-        <button class="fb-add-btn" onclick="addField('Selección')">+ Selección</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:0.8rem">
+        <div class="field">
+          <label class="field-label">Estado</label>
+          <select class="sel" id="aw-status">
+            <option value="portfolio">Portfolio (no en venta)</option>
+            <option value="for_sale">En venta</option>
+            <option value="sold">Vendida</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Precio (si está en venta)</label>
+          <input class="inp" type="text" id="aw-price" placeholder="Ej: 45">
+        </div>
+      </div>
+      <div class="upload" id="aw-upload-area" style="margin-bottom:1.2rem;cursor:pointer" onclick="document.getElementById('aw-file').click()">
+        <div class="upload-ic">↑</div>
+        <div class="upload-tx" id="aw-upload-tx">Toca para elegir imagen · JPG o PNG</div>
+        <input type="file" id="aw-file" accept="image/*" style="display:none" onchange="previewArtwork(this)">
+      </div>
+      <img id="aw-preview" style="display:none;width:100%;max-width:280px;border-radius:10px;margin-bottom:1rem;object-fit:cover">
+      <button class="btn-block primary" style="max-width:200px" id="aw-publish-btn" onclick="publishArtwork()">Publicar obra</button>
+      <p class="fnote" id="aw-publish-msg" style="display:none"></p>
+    </div>
+
+    <!-- panel: formulario de encargo -->
+    <div id="dtab-panel-form" style="display:none;padding-top:1.4rem">
+      <p style="font-size:0.82rem;color:var(--text-mute);margin-bottom:1rem;line-height:1.5">
+        Personaliza qué información pides a quien quiera encargarte algo.
+      </p>
+      <div class="form-builder">
+        <div class="fb-header">
+          <div>
+            <div class="fb-title">Tu formulario de encargo</div>
+            <div class="fb-subtitle">Los campos marcados con * son obligatorios</div>
+          </div>
+          <button class="btn-sm btn-read" onclick="go('form')">Vista previa →</button>
+        </div>
+        <div class="fb-fields" id="fb-fields"></div>
+        <div class="fb-add">
+          <button class="fb-add-btn" onclick="addField('Texto corto')">+ Texto corto</button>
+          <button class="fb-add-btn" onclick="addField('Texto largo')">+ Texto largo</button>
+          <button class="fb-add-btn" onclick="addField('Imagen')">+ Subir imagen</button>
+          <button class="fb-add-btn" onclick="addField('Fecha')">+ Fecha</button>
+          <button class="fb-add-btn" onclick="addField('Selección')">+ Selección</button>
+        </div>
       </div>
     </div>
 
-    <!-- subir obra -->
-    <div class="dash-section-title" style="margin-top:2rem">Subir nueva obra</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:0.8rem">
-      <div class="field">
-        <label class="field-label">Carta / título <span class="req">*</span></label>
-        <input class="inp" type="text" id="aw-title" placeholder="Ej: Liliana of the Veil">
-      </div>
-      <div class="field">
-        <label class="field-label">Juego <span class="req">*</span></label>
-        <select class="sel" id="aw-game">
-          <option>Magic</option><option>Pokémon</option><option>Lorcana</option><option>One Piece</option><option>Yu-Gi-Oh!</option>
-        </select>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:0.8rem">
-      <div class="field">
-        <label class="field-label">Estado</label>
-        <select class="sel" id="aw-status">
-          <option value="portfolio">Portfolio (no en venta)</option>
-          <option value="for_sale">En venta</option>
-          <option value="sold">Vendida</option>
-        </select>
-      </div>
-      <div class="field">
-        <label class="field-label">Precio (si está en venta)</label>
-        <input class="inp" type="text" id="aw-price" placeholder="Ej: 45">
-      </div>
-    </div>
-    <div class="upload" id="aw-upload-area" style="margin-bottom:1.2rem;cursor:pointer" onclick="document.getElementById('aw-file').click()">
-      <div class="upload-ic">↑</div>
-      <div class="upload-tx" id="aw-upload-tx">Toca para elegir imagen · JPG o PNG</div>
-      <input type="file" id="aw-file" accept="image/*" style="display:none" onchange="previewArtwork(this)">
-    </div>
-    <img id="aw-preview" style="display:none;width:100%;max-width:280px;border-radius:10px;margin-bottom:1rem;object-fit:cover">
-    <button class="btn-block primary" style="max-width:200px" id="aw-publish-btn" onclick="publishArtwork()">Publicar obra</button>
-    <p class="fnote" id="aw-publish-msg" style="display:none"></p>
   </div>
 </div>
 
@@ -2764,6 +2840,106 @@
     return `Hace ${Math.floor(days/365)} años`;
   }
 
+  // ===== MIS OBRAS (dashboard) =====
+  async function loadMyArtworks() {
+    if (!currentUser) return;
+    const { data: artworks } = await supa
+      .from('artworks')
+      .select('*')
+      .eq('artist_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    const list  = document.getElementById('my-artworks-list');
+    const badge = document.getElementById('my-artworks-count');
+
+    if (!artworks || artworks.length === 0) {
+      list.innerHTML = `<div style="font-size:0.82rem;color:var(--text-mute);padding:0.5rem 0">Aún no has subido ninguna obra.</div>`;
+      badge.style.display = 'none';
+      return;
+    }
+
+    badge.textContent = artworks.length;
+    badge.style.display = 'inline-flex';
+
+    const statusLabels = { portfolio: 'Portfolio', for_sale: 'En venta', sold: 'Vendida' };
+
+    list.innerHTML = artworks.map(aw => `
+      <div>
+        <div class="my-aw-item">
+          ${aw.image_url
+            ? `<img class="my-aw-thumb" src="${aw.image_url}" alt="${aw.title}">`
+            : `<div class="my-aw-thumb" style="display:flex;align-items:center;justify-content:center;font-size:1.3rem">🎨</div>`}
+          <div class="my-aw-info">
+            <div class="my-aw-title">${aw.title}</div>
+            <div class="my-aw-meta">
+              ${aw.game || '—'} · ${statusLabels[aw.status] || aw.status}
+              ${aw.price ? ` · ${aw.price}€` : ''}
+            </div>
+          </div>
+          <div class="my-aw-actions">
+            <button class="my-aw-btn" onclick="toggleEditArtwork('${aw.id}')">Editar</button>
+            <button class="my-aw-btn danger" onclick="deleteArtwork('${aw.id}', this)">Borrar</button>
+          </div>
+        </div>
+        <div class="my-aw-edit" id="edit-${aw.id}">
+          <select class="sel" id="edit-status-${aw.id}" style="flex:1;min-width:130px">
+            <option value="portfolio" ${aw.status==='portfolio'?'selected':''}>Portfolio</option>
+            <option value="for_sale"  ${aw.status==='for_sale' ?'selected':''}>En venta</option>
+            <option value="sold"      ${aw.status==='sold'     ?'selected':''}>Vendida</option>
+          </select>
+          <input class="inp" type="text" id="edit-price-${aw.id}"
+            placeholder="Precio (€)" value="${aw.price || ''}"
+            style="flex:1;min-width:90px;max-width:110px">
+          <button class="btn-sm btn-light" onclick="saveArtworkEdit('${aw.id}')">Guardar</button>
+          <button class="my-aw-btn" onclick="toggleEditArtwork('${aw.id}')">Cancelar</button>
+        </div>
+      </div>`).join('');
+  }
+
+  function toggleEditArtwork(id) {
+    const panel = document.getElementById('edit-' + id);
+    panel.classList.toggle('open');
+  }
+
+  async function saveArtworkEdit(id) {
+    const status = document.getElementById('edit-status-' + id).value;
+    const priceRaw = document.getElementById('edit-price-' + id).value.trim();
+    const price = priceRaw ? parseFloat(priceRaw.replace(',', '.')) : null;
+
+    const { error } = await supa.from('artworks')
+      .update({ status, price: isNaN(price) ? null : price })
+      .eq('id', id)
+      .eq('artist_id', currentUser.id);
+
+    if (error) {
+      alert('No se pudo guardar. Inténtalo de nuevo.');
+      return;
+    }
+    toggleEditArtwork(id);
+    loadMyArtworks();
+    loadMuro();
+  }
+
+  async function deleteArtwork(id, btn) {
+    if (!confirm('¿Seguro que quieres borrar esta obra? Esta acción no se puede deshacer.')) return;
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    const { error } = await supa.from('artworks')
+      .delete()
+      .eq('id', id)
+      .eq('artist_id', currentUser.id);
+
+    if (error) {
+      alert('No se pudo borrar. Inténtalo de nuevo.');
+      btn.disabled = false;
+      btn.textContent = 'Borrar';
+      return;
+    }
+    loadMyArtworks();
+    loadMuro();
+  }
+
   // ===== SUBIR OBRA =====
   let selectedArtworkFile = null;
 
@@ -2888,8 +3064,9 @@
     msg.textContent = '✓ Obra publicada. Ya aparece en el muro.';
     msg.style.color = 'var(--green)';
 
-    // refresh the wall
+    // refresh the wall and my artworks list
     loadMuro();
+    loadMyArtworks();
   }
 
   async function logout() {
@@ -2981,6 +3158,7 @@
     go('dash');
     buildFormFields();
     buildRequests();
+    loadMyArtworks();
   }
 
   function pickContact(el) {
@@ -3275,6 +3453,13 @@
     }, 3000);
   })();
 
+  function switchDashTab(tab) {
+    document.getElementById('dtab-panel-obra').style.display = tab === 'obra' ? 'block' : 'none';
+    document.getElementById('dtab-panel-form').style.display = tab === 'form' ? 'block' : 'none';
+    document.getElementById('dtab-obra').classList.toggle('active', tab === 'obra');
+    document.getElementById('dtab-form').classList.toggle('active', tab === 'form');
+  }
+
   // ===== FIRST VISIT BUBBLE =====
   function dismissFirstVisit() {
     const fv = document.getElementById('first-visit');
@@ -3350,6 +3535,7 @@
   buildFormFields();
   buildDynamicForm();
   buildRequests();
+  loadMyArtworks();
 
   // ===== ARTIST MODE TOGGLE (settings) =====
   function toggleArtistMode() {
