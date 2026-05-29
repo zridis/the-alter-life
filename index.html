@@ -2652,6 +2652,7 @@
         email, password,
         options: { data: { display_name: name || email.split('@')[0] } }
       });
+      console.log('[DEBUG signUp] error:', error, 'data:', data);
       if (error) { showAuthError(error.message); setAuthLoading(false); return; }
 
       const user    = data?.user;
