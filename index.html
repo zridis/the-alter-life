@@ -1393,12 +1393,12 @@
     <span class="nav-lnk active" id="nl-home" onclick="go('home')" style="display:none">Explorar</span>
     <button class="btn-pill btn-ghost" onclick="go('auth')" id="btn-entrar">Entrar</button>
     <div class="user-menu" id="user-menu" style="display:none">
-      <div class="av" onclick="toggleUserMenu()">🎨</div>
+      <div class="av" id="user-av" onclick="toggleUserMenu()">🎨</div>
       <div class="user-dropdown" id="user-dropdown">
         <div class="user-dd-head">
-          <div class="av" style="width:38px;height:38px">🎨</div>
+          <div class="av" id="user-av-lg" style="width:38px;height:38px">🎨</div>
           <div>
-            <div class="user-dd-name">Tu cuenta</div>
+            <div class="user-dd-name" id="user-dd-name">Tu cuenta</div>
             <div class="user-dd-email" id="user-dd-email">tucorreo@email.com</div>
           </div>
         </div>
@@ -2323,7 +2323,6 @@
   // ===== MURO REAL (Supabase) =====
   async function loadMuro() {
     const wall = document.getElementById('home-wall');
-    const empty = document.getElementById('home-empty');
     if (!wall) return;
 
     // Show loading skeleton
@@ -2625,14 +2624,16 @@
       const user = data?.user;
       const session = data?.session;
       if (user) {
-        await supa.from('profiles').upsert({ id: user.id, email, username: name || email.split('@')[0] });
+        // el trigger handle_new_user ya crea el profile
+        // solo actualizamos el username y país encima
+        await supa.from('profiles')
+          .update({ username: name || email.split('@')[0] })
+          .eq('id', user.id);
         setAuthLoading(false);
         if (session) {
-          // email confirmation off — log in directly
           currentUser = user;
           await loadUserProfile(user.id, isArtist ? 'onboard' : 'home');
         } else {
-          // email confirmation on — show confirm screen
           document.getElementById('confirm-email').textContent = email;
           go('confirm');
         }
@@ -2671,8 +2672,13 @@
   function showLoggedIn(name) {
     document.getElementById('btn-entrar').style.display = 'none';
     document.getElementById('user-menu').style.display  = 'block';
-    const av = document.getElementById('user-av');
-    if (av && name) av.textContent = name.charAt(0).toUpperCase();
+    const initial = name ? name.charAt(0).toUpperCase() : '?';
+    const av   = document.getElementById('user-av');
+    const avLg = document.getElementById('user-av-lg');
+    const ddName = document.getElementById('user-dd-name');
+    if (av)   av.textContent   = initial;
+    if (avLg) avLg.textContent = initial;
+    if (ddName && name) ddName.textContent = name;
   }
 
   function showLoggedOut() {
