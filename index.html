@@ -1760,6 +1760,9 @@
 
     <button class="btn-block primary" id="auth-btn" onclick="submitAuth()">Crear cuenta</button>
     <div class="auth-alt" id="auth-alt">¿Ya tienes cuenta? <a onclick="authMode('login')">Inicia sesión</a></div>
+    <div class="auth-alt" id="auth-forgot" style="display:none;margin-top:0.5rem">
+      <a onclick="forgotPassword()">¿Has olvidado tu contraseña?</a>
+    </div>
   </div>
 </div>
 
@@ -2522,10 +2525,16 @@
   });
 
   // Listen for auth changes
-  supa.auth.onAuthStateChange((_event, session) => {
+  supa.auth.onAuthStateChange((event, session) => {
     if (session) {
       currentUser = session.user;
-      loadUserProfile(session.user.id);
+      // Bug 3 fix: cuando el usuario confirma el email y vuelve a la web,
+      // el evento es SIGNED_IN — iniciamos sesión y mandamos al muro
+      if (event === 'SIGNED_IN') {
+        loadUserProfile(session.user.id, 'home');
+      } else {
+        loadUserProfile(session.user.id);
+      }
     } else {
       currentUser = null;
       showLoggedOut();
@@ -2583,6 +2592,24 @@
     document.getElementById('auth-alt').innerHTML    = isRegister
       ? '¿Ya tienes cuenta? <a onclick="authMode(\'login\')">Inicia sesión</a>'
       : '¿No tienes cuenta? <a onclick="authMode(\'register\')">Regístrate</a>';
+    document.getElementById('auth-forgot').style.display = isRegister ? 'none' : 'block';
+  }
+
+  async function forgotPassword() {
+    const email = document.getElementById('inp-email')?.value?.trim();
+    if (!email) {
+      showAuthError('Escribe tu email arriba y vuelve a pulsar "¿Has olvidado tu contraseña?"');
+      return;
+    }
+    const { error } = await supa.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://the-alter-life.vercel.app'
+    });
+    if (error) {
+      showAuthError('No se pudo enviar el email. Inténtalo de nuevo.');
+    } else {
+      showAuthError('Te hemos enviado un email para restablecer tu contraseña.');
+      document.getElementById('auth-error').style.color = '#5fc97a';
+    }
   }
 
   function toggleOptin() {
@@ -2621,25 +2648,25 @@
         options: { data: { display_name: name || email.split('@')[0] } }
       });
       if (error) { showAuthError(error.message); setAuthLoading(false); return; }
-      const user = data?.user;
+
+      const user    = data?.user;
       const session = data?.session;
-      if (user) {
-        // el trigger handle_new_user ya crea el profile
-        // solo actualizamos el username y país encima
-        await supa.from('profiles')
-          .update({ username: name || email.split('@')[0] })
-          .eq('id', user.id);
-        setAuthLoading(false);
-        if (session) {
-          currentUser = user;
-          await loadUserProfile(user.id, isArtist ? 'onboard' : 'home');
-        } else {
-          document.getElementById('confirm-email').textContent = email;
-          go('confirm');
-        }
-      } else {
+
+      setAuthLoading(false);
+
+      if (!user) {
         showAuthError('No se pudo crear la cuenta. Inténtalo de nuevo.');
-        setAuthLoading(false);
+        return;
+      }
+
+      if (session) {
+        // confirmación desactivada — sesión inmediata
+        currentUser = user;
+        await loadUserProfile(user.id, isArtist ? 'onboard' : 'home');
+      } else {
+        // confirmación activada — mandar a pantalla de confirmación
+        document.getElementById('confirm-email').textContent = email;
+        go('confirm');
       }
     } else {
       const { data, error } = await supa.auth.signInWithPassword({ email, password });
