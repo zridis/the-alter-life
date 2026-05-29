@@ -2526,10 +2526,10 @@
 
   // Listen for auth changes
   supa.auth.onAuthStateChange((event, session) => {
+    // ignorar eventos de registro sin sesión (email pendiente de confirmar)
+    if (event === 'INITIAL_SESSION' && !session) return;
     if (session) {
       currentUser = session.user;
-      // Bug 3 fix: cuando el usuario confirma el email y vuelve a la web,
-      // el evento es SIGNED_IN — iniciamos sesión y mandamos al muro
       if (event === 'SIGNED_IN') {
         loadUserProfile(session.user.id, 'home');
       } else {
@@ -2542,9 +2542,10 @@
   });
 
   async function loadUserProfile(userId, redirectAfter) {
-    const { data: profile } = await supa.from('profiles').select('*').eq('id', userId).single();
-    const { data: artist }  = await supa.from('artists').select('id').eq('id', userId).single();
-    isArtist = !!artist;
+    try {
+      const { data: profile } = await supa.from('profiles').select('*').eq('id', userId).single();
+      const { data: artist }  = await supa.from('artists').select('id').eq('id', userId).maybeSingle();
+      isArtist = !!artist;
 
     const name  = profile?.username || currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'Tú';
     const email = currentUser?.email || '';
@@ -2576,6 +2577,10 @@
       go('onboard');
     } else if (redirectAfter === 'home') {
       go('home');
+    }
+    } catch(e) {
+      // sesión no confirmada aún — no hacer nada
+      console.log('loadUserProfile skipped:', e.message);
     }
   }
 
