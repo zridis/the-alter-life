@@ -2664,6 +2664,12 @@
         return;
       }
 
+      // Supabase devuelve identities vacío cuando el email YA existe
+      if (user.identities && user.identities.length === 0) {
+        showAuthError('Este email ya está registrado. Inicia sesión o usa "¿Has olvidado tu contraseña?".');
+        return;
+      }
+
       if (session) {
         // confirmación desactivada — sesión inmediata
         currentUser = user;
