@@ -2255,6 +2255,7 @@
       <div class="modal-desc">Alter pintado a mano sobre carta original. El artista puede crear un encargo en estilo similar adaptado a tu carta.</div>
       <div class="modal-price" id="m-price"></div>
       <div class="modal-actions">
+        <button class="btn-block primary" id="m-buy" onclick="buyArtwork()" style="display:none">Quiero comprar esta pieza</button>
         <button class="btn-block primary" id="m-cta" onclick="closeModal();go('form')">Solicitar encargo similar</button>
         <button class="btn-block secondary" onclick="closeModal();openProfile(currentModalArtistId)">Ver más obras de este artista</button>
       </div>
@@ -2455,9 +2456,12 @@
   // ===== MODAL =====
   let currentModalArtistId = null;
 
+  let currentModalArtwork = null;
+
   function openModal(i) {
     const p = allArtworks[i];
     if (!p) return;
+    currentModalArtwork = p;
     currentModalArtistId = p.artist_id || null;
     const img = document.getElementById('m-img');
     if (p.image_url) {
@@ -2478,17 +2482,31 @@
 
     const priceEl = document.getElementById('m-price');
     const ctaEl   = document.getElementById('m-cta');
+    const buyEl   = document.getElementById('m-buy');
     const price = p.price ? p.price + '€' : null;
-    if ((st === 'for_sale' || st === 'sale') && price) {
-      priceEl.innerHTML = price + ' <span>precio orientativo</span>';
-      ctaEl.disabled = false; ctaEl.textContent = 'Solicitar encargo similar';
+    const onSale = (st === 'for_sale' || st === 'sale') && price;
+
+    // ¿es mi propia obra? no puedo comprármela
+    const isOwn = currentUser && currentUser.id === p.artist_id;
+
+    if (onSale && !isOwn) {
+      priceEl.innerHTML = price + ' <span>precio de venta</span>';
+      buyEl.style.display = '';
+      ctaEl.textContent = 'Solicitar encargo similar';
+    } else if (onSale && isOwn) {
+      priceEl.innerHTML = price + ' <span>tu obra en venta</span>';
+      buyEl.style.display = 'none';
+      ctaEl.textContent = 'Solicitar encargo similar';
     } else if (st === 'sold') {
       priceEl.innerHTML = `<span style="color:var(--text-mute)">Vendida · ${price||''}</span>`;
-      ctaEl.disabled = false; ctaEl.textContent = 'Encargar algo similar';
+      buyEl.style.display = 'none';
+      ctaEl.textContent = 'Encargar algo similar';
     } else {
       priceEl.innerHTML = '<span style="color:var(--text-mute)">Solo portfolio</span>';
-      ctaEl.disabled = false; ctaEl.textContent = 'Encargar algo similar';
+      buyEl.style.display = 'none';
+      ctaEl.textContent = 'Encargar algo similar';
     }
+    ctaEl.disabled = false;
 
     document.getElementById('modal').classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -2496,6 +2514,55 @@
   function closeModal() {
     document.getElementById('modal').classList.remove('open');
     document.body.style.overflow = '';
+  }
+
+  // ===== COMPRAR OBRA =====
+  async function buyArtwork() {
+    if (!currentModalArtwork) return;
+
+    // requiere estar logueado
+    if (!currentUser) {
+      closeModal();
+      go('auth');
+      authMode('login');
+      showAuthError('Inicia sesión para comprar esta pieza.');
+      return;
+    }
+
+    const p = currentModalArtwork;
+    const buyEl = document.getElementById('m-buy');
+    buyEl.disabled = true;
+    buyEl.textContent = 'Enviando...';
+
+    // registrar la solicitud de compra como un "encargo" especial tipo compra
+    const { error } = await supa.from('commissions').insert({
+      artist_id: p.artist_id,
+      client_id: currentUser.id,
+      form_data: {
+        tipo: 'compra_directa',
+        obra_id: p.id,
+        obra_titulo: p.title,
+        precio: p.price,
+        mensaje: `Quiero comprar la pieza "${p.title}" (${p.price}€)`
+      },
+      status: 'pending'
+    });
+
+    if (error) {
+      console.error('Error al comprar:', error);
+      buyEl.disabled = false;
+      buyEl.textContent = 'Quiero comprar esta pieza';
+      alert('No se pudo enviar tu solicitud. Inténtalo de nuevo.');
+      return;
+    }
+
+    buyEl.textContent = '✓ Solicitud enviada';
+    setTimeout(() => {
+      closeModal();
+      buyEl.disabled = false;
+      buyEl.textContent = 'Quiero comprar esta pieza';
+      alert('¡Solicitud enviada! El artista recibirá tu interés y se pondrá en contacto contigo.');
+    }, 800);
   }
 
   // ===== NAVIGATION =====
@@ -2795,12 +2862,23 @@
     const label = document.getElementById('profile-avail-label');
     const btn   = document.getElementById('profile-encargo-btn');
     const banner = document.getElementById('profile-closed-banner');
-    if (artist.is_open) {
+
+    // ¿es mi propio perfil? entonces no puedo autoencargarme
+    const isOwnProfile = currentUser && currentUser.id === artistId;
+
+    if (isOwnProfile) {
+      btn.style.display = 'none';
+      badge.className = 'avail-badge avail-open';
+      label.textContent = artist.is_open ? 'Acepta encargos' : 'Encargos cerrados';
+      if (banner) banner.style.display = 'none';
+    } else if (artist.is_open) {
+      btn.style.display = '';
       badge.className = 'avail-badge avail-open';
       label.textContent = 'Acepta encargos';
       btn.disabled = false;
       if (banner) banner.style.display = 'none';
     } else {
+      btn.style.display = '';
       badge.className = 'avail-badge avail-closed';
       label.textContent = 'Encargos cerrados';
       btn.disabled = true;
