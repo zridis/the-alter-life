@@ -2511,110 +2511,108 @@
     window.scrollTo(0, 0);
   }
 
-  // ===== AUTH =====
+  // ===== AUTH (reescrito limpio) =====
+  // Arquitectura: onAuthStateChange es la ÚNICA fuente de verdad para la
+  // navegación tras login. submitAuth solo dispara acciones y muestra errores.
+  // Así nunca se pisan dos redirects a la vez.
+
   let isRegister = true;
   let isArtist   = false;
   let currentUser = null;
+  let pendingArtistOnboard = false;  // si el registro marcó "soy artista"
 
-  // Check session on load
-  supa.auth.getSession().then(({ data: { session } }) => {
-    if (session) {
-      currentUser = session.user;
-      loadUserProfile(session.user.id);
-    }
-  });
-
-  // Listen for auth changes
+  // --- Listener único: gestiona TODA la sesión ---
   supa.auth.onAuthStateChange((event, session) => {
-    // ignorar eventos de registro sin sesión (email pendiente de confirmar)
-    if (event === 'INITIAL_SESSION' && !session) return;
-    if (session) {
+    console.log('[auth]', event, session ? 'con sesión' : 'sin sesión');
+
+    if (session && session.user) {
       currentUser = session.user;
+
+      // Decidir a dónde navegar según el evento
       if (event === 'SIGNED_IN') {
-        loadUserProfile(session.user.id, 'home');
-      } else {
-        loadUserProfile(session.user.id);
+        // login normal, confirmación de email, u OAuth
+        const dest = pendingArtistOnboard ? 'onboard' : 'home';
+        pendingArtistOnboard = false;
+        hydrateUser(session.user.id, dest);
+      } else if (event === 'INITIAL_SESSION') {
+        // ya había sesión al cargar la página — no forzar navegación
+        hydrateUser(session.user.id, null);
+      } else if (event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
+        hydrateUser(session.user.id, null);
       }
     } else {
+      // sin sesión
       currentUser = null;
       showLoggedOut();
     }
   });
 
-  async function loadUserProfile(userId, redirectAfter) {
-    try {
-      const { data: profile } = await supa.from('profiles').select('*').eq('id', userId).single();
-      const { data: artist }  = await supa.from('artists').select('id').eq('id', userId).maybeSingle();
-      isArtist = !!artist;
+  // --- Cargar datos del usuario y (opcionalmente) navegar ---
+  // La navegación va PRIMERO para que nunca falle por culpa de los datos.
+  async function hydrateUser(userId, dest) {
+    if (dest === 'onboard')   go('onboard');
+    else if (dest === 'home') go('home');
 
+    let profile = null, artist = null;
+    try {
+      const r1 = await supa.from('profiles').select('*').eq('id', userId).maybeSingle();
+      profile = r1.data;
+      const r2 = await supa.from('artists').select('id').eq('id', userId).maybeSingle();
+      artist = r2.data;
+    } catch (e) {
+      console.log('[auth] hydrate data error:', e.message);
+    }
+
+    isArtist = !!artist;
     const name  = profile?.username || currentUser?.user_metadata?.display_name || currentUser?.email?.split('@')[0] || 'Tú';
     const email = currentUser?.email || '';
 
-    // topbar avatar
     showLoggedIn(name);
 
-    // user dropdown
     const ddEmail = document.getElementById('user-dd-email');
     if (ddEmail) ddEmail.textContent = email;
-
-    // settings fields
     const setName = document.getElementById('set-name');
     if (setName) setName.value = name;
     const setEmail = document.getElementById('set-email');
     if (setEmail) setEmail.value = email;
     if (profile?.country) {
       const setCountry = document.getElementById('set-country');
-      if (setCountry) {
-        [...setCountry.options].forEach(o => { if (o.text === profile.country) o.selected = true; });
-      }
+      if (setCountry) [...setCountry.options].forEach(o => { if (o.text === profile.country) o.selected = true; });
     }
-
-    if (isArtist) document.getElementById('udd-dash').style.display = 'flex';
+    if (isArtist) {
+      const dash = document.getElementById('udd-dash');
+      if (dash) dash.style.display = 'flex';
+    }
     loadMuro();
-
-    // navigate after profile is fully loaded
-    if (redirectAfter === 'onboard') {
-      go('onboard');
-    } else if (redirectAfter === 'home') {
-      go('home');
-    }
-    } catch(e) {
-      // sesión no confirmada aún — no hacer nada
-      console.log('loadUserProfile skipped:', e.message);
-    }
   }
 
+  // alias por compatibilidad con el resto del código que aún llama loadUserProfile
+  async function loadUserProfile(userId, redirectAfter) {
+    return hydrateUser(userId, redirectAfter);
+  }
+
+  // --- Cambiar entre registro / login ---
   function authMode(mode) {
     isRegister = mode === 'register';
     document.getElementById('at-reg').classList.toggle('active', isRegister);
     document.getElementById('at-login').classList.toggle('active', !isRegister);
     const show = isRegister ? '' : 'none';
-    ['f-name','f-country','optin'].forEach(id => document.getElementById(id).style.display = show);
-    document.getElementById('auth-sub').textContent  = isRegister ? 'Crea tu cuenta gratis' : 'Bienvenido de vuelta';
-    document.getElementById('auth-btn').textContent  = isRegister ? 'Crear cuenta' : 'Iniciar sesión';
-    document.getElementById('g-label').textContent   = isRegister ? 'Registrarse con Google' : 'Entrar con Google';
-    document.getElementById('d-label').textContent   = isRegister ? 'Registrarse con Discord' : 'Entrar con Discord';
-    document.getElementById('auth-alt').innerHTML    = isRegister
+    ['f-name','f-country','optin'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = show;
+    });
+    document.getElementById('auth-sub').textContent = isRegister ? 'Crea tu cuenta gratis' : 'Bienvenido de vuelta';
+    document.getElementById('auth-btn').textContent = isRegister ? 'Crear cuenta' : 'Iniciar sesión';
+    const gl = document.getElementById('g-label');
+    if (gl) gl.textContent = isRegister ? 'Registrarse con Google' : 'Entrar con Google';
+    const dl = document.getElementById('d-label');
+    if (dl) dl.textContent = isRegister ? 'Registrarse con Discord' : 'Entrar con Discord';
+    document.getElementById('auth-alt').innerHTML = isRegister
       ? '¿Ya tienes cuenta? <a onclick="authMode(\'login\')">Inicia sesión</a>'
       : '¿No tienes cuenta? <a onclick="authMode(\'register\')">Regístrate</a>';
-    document.getElementById('auth-forgot').style.display = isRegister ? 'none' : 'block';
-  }
-
-  async function forgotPassword() {
-    const email = document.getElementById('inp-email')?.value?.trim();
-    if (!email) {
-      showAuthError('Escribe tu email arriba y vuelve a pulsar "¿Has olvidado tu contraseña?"');
-      return;
-    }
-    const { error } = await supa.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://the-alter-life.vercel.app'
-    });
-    if (error) {
-      showAuthError('No se pudo enviar el email. Inténtalo de nuevo.');
-    } else {
-      showAuthError('Te hemos enviado un email para restablecer tu contraseña.');
-      document.getElementById('auth-error').style.color = '#5fc97a';
-    }
+    const fg = document.getElementById('auth-forgot');
+    if (fg) fg.style.display = isRegister ? 'none' : 'block';
+    clearAuthError();
   }
 
   function toggleOptin() {
@@ -2622,74 +2620,101 @@
     document.getElementById('optin').classList.toggle('on', isArtist);
   }
 
-  async function loginWithGoogle() {
-    const { error } = await supa.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.href }
-    });
-    if (error) showAuthError('Error al conectar con Google. Inténtalo de nuevo.');
-  }
-
-  async function loginWithDiscord() {
-    const { error } = await supa.auth.signInWithOAuth({
-      provider: 'discord',
-      options: { redirectTo: window.location.href }
-    });
-    if (error) showAuthError('Error al conectar con Discord. Inténtalo de nuevo.');
-  }
-
+  // --- Registro / Login: solo dispara, NO navega (de eso se encarga el listener) ---
   async function submitAuth() {
     const email    = document.getElementById('inp-email')?.value?.trim();
     const password = document.getElementById('inp-pass')?.value;
     const name     = document.getElementById('inp-name')?.value?.trim();
 
+    clearAuthError();
     if (!email || !password) { showAuthError('Rellena el email y la contraseña.'); return; }
+    if (isRegister && password.length < 6) { showAuthError('La contraseña debe tener al menos 6 caracteres.'); return; }
 
     setAuthLoading(true);
 
     if (isRegister) {
+      pendingArtistOnboard = isArtist;  // recordar para cuando el listener dispare
       const { data, error } = await supa.auth.signUp({
         email, password,
         options: { data: { display_name: name || email.split('@')[0] } }
       });
-      console.log('[DEBUG signUp] error:', error, 'data:', data);
-      if (error) { showAuthError(error.message); setAuthLoading(false); return; }
+      setAuthLoading(false);
+
+      if (error) {
+        if (error.message && error.message.toLowerCase().includes('already'))
+          showAuthError('Este email ya está registrado. Inicia sesión.');
+        else if (error.message && error.message.toLowerCase().includes('sending'))
+          showAuthError('No se pudo enviar el email de confirmación. En modo prueba solo funciona con tu propio correo.');
+        else
+          showAuthError(error.message || 'No se pudo crear la cuenta.');
+        return;
+      }
 
       const user    = data?.user;
       const session = data?.session;
 
-      setAuthLoading(false);
-
-      if (!user) {
-        showAuthError('No se pudo crear la cuenta. Inténtalo de nuevo.');
-        return;
-      }
-
-      // Supabase devuelve identities vacío cuando el email YA existe
-      if (user.identities && user.identities.length === 0) {
-        showAuthError('Este email ya está registrado. Inicia sesión o usa "¿Has olvidado tu contraseña?".');
+      // email ya existe sin confirmar (Supabase devuelve user null o identities vacío)
+      if (!user || (user.identities && user.identities.length === 0)) {
+        document.getElementById('confirm-email').textContent = email;
+        go('confirm');
         return;
       }
 
       if (session) {
-        // confirmación desactivada — sesión inmediata
-        currentUser = user;
-        await loadUserProfile(user.id, isArtist ? 'onboard' : 'home');
+        // confirmación desactivada → el listener SIGNED_IN ya navega solo
+        // no hacemos nada aquí
       } else {
-        // confirmación activada — mandar a pantalla de confirmación
+        // confirmación activada → pantalla "revisa tu email"
         document.getElementById('confirm-email').textContent = email;
         go('confirm');
       }
+
     } else {
-      const { data, error } = await supa.auth.signInWithPassword({ email, password });
-      if (error) { showAuthError('Email o contraseña incorrectos.'); setAuthLoading(false); return; }
-      const user = data?.user;
+      // LOGIN
+      const { error } = await supa.auth.signInWithPassword({ email, password });
       setAuthLoading(false);
-      if (user) {
-        currentUser = user;
-        await loadUserProfile(user.id, 'home');
+      if (error) {
+        if (error.message && error.message.toLowerCase().includes('not confirmed'))
+          showAuthError('Tienes que confirmar tu email antes de entrar. Revisa tu correo.');
+        else
+          showAuthError('Email o contraseña incorrectos.');
+        return;
       }
+      // éxito → el listener SIGNED_IN navega solo
     }
+  }
+
+  async function forgotPassword() {
+    const email = document.getElementById('inp-email')?.value?.trim();
+    if (!email) { showAuthError('Escribe tu email arriba y vuelve a pulsar el enlace.'); return; }
+    const { error } = await supa.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://the-alter-life.vercel.app'
+    });
+    if (error) {
+      showAuthError('No se pudo enviar el email. Inténtalo de nuevo.');
+    } else {
+      showAuthError('Te hemos enviado un email para restablecer tu contraseña.');
+      const el = document.getElementById('auth-error');
+      if (el) el.style.color = '#5fc97a';
+    }
+  }
+
+  async function loginWithGoogle() {
+    pendingArtistOnboard = isArtist;
+    const { error } = await supa.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: 'https://the-alter-life.vercel.app' }
+    });
+    if (error) showAuthError('Error al conectar con Google. Inténtalo de nuevo.');
+  }
+
+  async function loginWithDiscord() {
+    pendingArtistOnboard = isArtist;
+    const { error } = await supa.auth.signInWithOAuth({
+      provider: 'discord',
+      options: { redirectTo: 'https://the-alter-life.vercel.app' }
+    });
+    if (error) showAuthError('Error al conectar con Discord. Inténtalo de nuevo.');
   }
 
   function setAuthLoading(loading) {
@@ -2702,10 +2727,15 @@
     if (!el) {
       el = document.createElement('div');
       el.id = 'auth-error';
-      el.style.cssText = 'color:#e05555;font-size:0.82rem;text-align:center;margin-top:0.5rem;';
+      el.style.cssText = 'font-size:0.82rem;text-align:center;margin-top:0.6rem;';
       document.getElementById('auth-btn')?.after(el);
     }
+    el.style.color = '#e05555';
     el.textContent = msg;
+  }
+  function clearAuthError() {
+    const el = document.getElementById('auth-error');
+    if (el) el.textContent = '';
   }
 
   function showLoggedIn(name) {
@@ -2721,9 +2751,12 @@
   }
 
   function showLoggedOut() {
-    document.getElementById('btn-entrar').style.display = '';
-    document.getElementById('user-menu').style.display  = 'none';
-    document.getElementById('udd-dash').style.display   = 'none';
+    const be = document.getElementById('btn-entrar');
+    if (be) be.style.display = '';
+    const um = document.getElementById('user-menu');
+    if (um) um.style.display = 'none';
+    const dash = document.getElementById('udd-dash');
+    if (dash) dash.style.display = 'none';
     isArtist = false;
   }
 
