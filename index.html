@@ -727,21 +727,36 @@
 
   /* requests / inbox */
   .dash-tabs {
-    display: flex; gap: 0.4rem;
+    display: flex; gap: 0.3rem;
     border-bottom: 1px solid var(--border);
     margin-bottom: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
+  .dash-tabs::-webkit-scrollbar { display: none; }
   .dash-tab {
+    position: relative;
     padding: 0.55rem 1.1rem;
     font-size: 0.84rem; font-weight: 500;
     background: none; border: none;
     color: var(--text-mute); cursor: pointer;
     border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
+    margin-bottom: -1px; white-space: nowrap;
     transition: color 0.15s, border-color 0.15s;
+    flex-shrink: 0;
   }
   .dash-tab:hover { color: var(--text); }
   .dash-tab.active { color: var(--text); border-bottom-color: var(--text); }
+  .dash-tab-badge {
+    position: absolute; top: 4px; right: 4px;
+    min-width: 16px; height: 16px; padding: 0 4px;
+    background: #e0633a; color: #fff;
+    font-size: 0.62rem; font-weight: 700;
+    border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dash-panel { min-height: 200px; }
 
   .my-aw-item {
     display: flex; align-items: center; gap: 0.9rem;
@@ -783,6 +798,20 @@
     gap: 0.6rem;
   }
   .my-aw-edit.open { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem; }
+
+  .pin-unsave {
+    position: absolute; top: 8px; right: 8px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(8,9,13,0.75); backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff; font-size: 0.8rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.15s, background 0.15s;
+    z-index: 3;
+  }
+  .pin-card:hover .pin-unsave { opacity: 1; }
+  .pin-unsave:hover { background: rgba(224,85,85,0.9); }
+  @media (max-width: 768px) { .pin-unsave { opacity: 1; } }
 
   .request-thumb.rt-buy, .request-thumb.rt-commission {
     display: flex; align-items: center; justify-content: center;
@@ -1862,29 +1891,15 @@
 <!-- ===== ARTIST DASHBOARD ===== -->
 <div class="page" id="page-dash">
   <div class="dash-wrap">
+
+    <!-- cabecera -->
     <div class="dash-head">
       <div class="dash-title">Mi panel</div>
-      <button class="btn-pill btn-ghost" onclick="currentUser && openProfile(currentUser.id)">Ver mi perfil público →</button>
+      <button class="btn-pill btn-ghost" onclick="currentUser && openProfile(currentUser.id)">Ver perfil público →</button>
     </div>
 
-    <!-- stats -->
-    <div class="dash-stats">
-      <div class="dash-stat">
-        <div class="dash-stat-n">3</div>
-        <div class="dash-stat-l">Solicitudes nuevas</div>
-      </div>
-      <div class="dash-stat">
-        <div class="dash-stat-n">28</div>
-        <div class="dash-stat-l">Obras subidas</div>
-      </div>
-      <div class="dash-stat">
-        <div class="dash-stat-n">4.9★</div>
-        <div class="dash-stat-l">Valoración media</div>
-      </div>
-    </div>
-
-    <!-- availability toggle -->
-    <div class="avail-toggle" onclick="toggleAvail()">
+    <!-- toggle disponibilidad -->
+    <div class="avail-toggle" onclick="toggleAvail()" style="margin-bottom:1.4rem">
       <div class="avail-toggle-txt">
         <div class="avail-toggle-label" id="avail-label">Acepto encargos</div>
         <div class="avail-toggle-desc" id="avail-desc">Los compradores pueden enviarte solicitudes</div>
@@ -1892,30 +1907,36 @@
       <div class="toggle-switch on" id="avail-sw"></div>
     </div>
 
-    <!-- mis obras -->
-    <div class="dash-section-title" style="margin-top:2rem">
-      Mis obras
-      <span class="dash-badge" id="my-artworks-count" style="display:none"></span>
-    </div>
-    <div id="my-artworks-list">
-      <div style="font-size:0.82rem;color:var(--text-mute);padding:0.5rem 0">Cargando tus obras...</div>
+    <!-- pestañas únicas -->
+    <div class="dash-tabs">
+      <button class="dash-tab active" id="dtab-solicitudes" onclick="switchDashTab('solicitudes')">
+        Solicitudes
+        <span class="dash-tab-badge" id="solicitudes-badge" style="display:none"></span>
+      </button>
+      <button class="dash-tab" id="dtab-obras" onclick="switchDashTab('obras')">
+        Mis obras
+        <span class="dash-tab-badge" id="obras-badge" style="display:none"></span>
+      </button>
+      <button class="dash-tab" id="dtab-subir" onclick="switchDashTab('subir')">Subir obra</button>
+      <button class="dash-tab" id="dtab-form" onclick="switchDashTab('form')">Formulario</button>
     </div>
 
-    <!-- solicitudes -->
-    <div class="dash-section-title">
-      Solicitudes de encargo
-      <span class="dash-badge">3 nuevas</span>
+    <!-- panel: solicitudes -->
+    <div class="dash-panel" id="dpanel-solicitudes" style="padding-top:1.2rem">
+      <div id="requests">
+        <div style="font-size:0.82rem;color:var(--text-mute);padding:0.5rem 0">Cargando solicitudes...</div>
+      </div>
     </div>
-    <div id="requests"></div>
 
-    <!-- pestañas: subir obra / formulario -->
-    <div class="dash-tabs" style="margin-top:2rem">
-      <button class="dash-tab active" id="dtab-obra" onclick="switchDashTab('obra')">Subir obra</button>
-      <button class="dash-tab" id="dtab-form" onclick="switchDashTab('form')">Formulario de encargo</button>
+    <!-- panel: mis obras -->
+    <div class="dash-panel" id="dpanel-obras" style="display:none;padding-top:1.2rem">
+      <div id="my-artworks-list">
+        <div style="font-size:0.82rem;color:var(--text-mute);padding:0.5rem 0">Cargando tus obras...</div>
+      </div>
     </div>
 
     <!-- panel: subir obra -->
-    <div id="dtab-panel-obra" style="padding-top:1.4rem">
+    <div class="dash-panel" id="dpanel-subir" style="display:none;padding-top:1.4rem">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:0.8rem">
         <div class="field">
           <label class="field-label">Carta / título <span class="req">*</span></label>
@@ -1953,7 +1974,7 @@
     </div>
 
     <!-- panel: formulario de encargo -->
-    <div id="dtab-panel-form" style="display:none;padding-top:1.4rem">
+    <div class="dash-panel" id="dpanel-form" style="display:none;padding-top:1.4rem">
       <p style="font-size:0.82rem;color:var(--text-mute);margin-bottom:1rem;line-height:1.5">
         Personaliza qué información pides a quien quiera encargarte algo.
       </p>
@@ -2582,7 +2603,7 @@
 
     // cargar datos reales al entrar en cada página
     if (page === 'saved') loadSaved();
-    if (page === 'dash')  { buildRequests(); loadMyArtworks(); }
+    if (page === 'dash')  { switchDashTab('solicitudes'); }
 
     window.scrollTo(0, 0);
   }
@@ -2621,12 +2642,13 @@
 
     allArtworks = artworks;  // para que el modal funcione
     wall.innerHTML = artworks.map((p, i) => `
-      <div class="pin" onclick="openModal(${i})">
-        <div class="pin-card">
+      <div class="pin">
+        <div class="pin-card" onclick="openModal(${i})">
           ${p.image_url
             ? `<img src="${p.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:14px 14px 0 0" loading="lazy">`
             : `<div class="pin-art a${(i%10)+1}" style="width:100%;height:100%"></div>`}
           <div class="pin-badge ${stateCls[p.status] || 'badge-folio'}">${stateLabel[p.status] || 'Portfolio'}</div>
+          <button class="pin-unsave" onclick="event.stopPropagation();unsaveArtwork('${p.id}', this)" title="Quitar de guardadas">✕</button>
         </div>
         <div class="pin-meta">
           <div class="pin-title">${p.title}</div>
@@ -2634,6 +2656,22 @@
           ${p.price ? `<div class="pin-price">${p.price}€</div>` : ''}
         </div>
       </div>`).join('');
+  }
+
+  async function unsaveArtwork(artworkId, btn) {
+    if (!currentUser) return;
+    btn.disabled = true;
+    const { error } = await supa.from('saved_artworks')
+      .delete()
+      .eq('user_id', currentUser.id)
+      .eq('artwork_id', artworkId);
+    if (error) { btn.disabled = false; return; }
+    // quitar la tarjeta con una pequeña animación
+    const pin = btn.closest('.pin');
+    pin.style.transition = 'opacity 0.25s, transform 0.25s';
+    pin.style.opacity = '0';
+    pin.style.transform = 'scale(0.9)';
+    setTimeout(() => loadSaved(), 280);
   }
 
   // ===== AUTH (reescrito limpio) =====
@@ -3064,16 +3102,15 @@
       .order('created_at', { ascending: false });
 
     const list  = document.getElementById('my-artworks-list');
-    const badge = document.getElementById('my-artworks-count');
+    const badge = document.getElementById('obras-badge');
 
     if (!artworks || artworks.length === 0) {
       list.innerHTML = `<div style="font-size:0.82rem;color:var(--text-mute);padding:0.5rem 0">Aún no has subido ninguna obra.</div>`;
-      badge.style.display = 'none';
+      if (badge) badge.style.display = 'none';
       return;
     }
 
-    badge.textContent = artworks.length;
-    badge.style.display = 'inline-flex';
+    if (badge) { badge.textContent = artworks.length; badge.style.display = 'flex'; }
 
     const statusLabels = { portfolio: 'Portfolio', for_sale: 'En venta', sold: 'Vendida' };
 
@@ -3464,9 +3501,11 @@
 
     const { data: commissions, error } = await supa
       .from('commissions')
-      .select('*, profiles!commissions_client_id_fkey(username)')
+      .select('*')
       .eq('artist_id', currentUser.id)
       .order('created_at', { ascending: false });
+
+    console.log('[requests] error:', error, 'count:', commissions?.length);
 
     if (error || !commissions || commissions.length === 0) {
       container.innerHTML = `<div style="font-size:0.82rem;color:var(--text-mute);padding:0.8rem 0">Aún no tienes solicitudes. Cuando alguien te encargue o quiera comprar una obra, aparecerá aquí.</div>`;
@@ -3475,18 +3514,26 @@
       return;
     }
 
+    // cargar nombres de los clientes (consulta aparte para no depender del nombre de la FK)
+    const clientIds = [...new Set(commissions.map(c => c.client_id).filter(Boolean))];
+    let clientNames = {};
+    if (clientIds.length) {
+      const { data: profs } = await supa.from('profiles').select('id, username').in('id', clientIds);
+      (profs || []).forEach(p => { clientNames[p.id] = p.username; });
+    }
+
     // contador de nuevas (pendientes)
     const pending = commissions.filter(c => c.status === 'pending').length;
-    const badge = document.querySelector('.dash-badge');
+    const badge = document.getElementById('solicitudes-badge');
     if (badge) {
-      if (pending > 0) { badge.textContent = pending + ' nueva' + (pending>1?'s':''); badge.style.display = 'inline-flex'; }
+      if (pending > 0) { badge.textContent = pending; badge.style.display = 'flex'; }
       else badge.style.display = 'none';
     }
 
     container.innerHTML = commissions.map(c => {
       const fd = c.form_data || {};
       const isCompra = fd.tipo === 'compra_directa';
-      const clientName = c.profiles?.username || 'Usuario';
+      const clientName = clientNames[c.client_id] || 'Usuario';
       const title = isCompra ? `🛒 Compra: ${fd.obra_titulo || 'obra'}` : 'Solicitud de encargo';
       const preview = isCompra
         ? `Quiere comprar "${fd.obra_titulo}" por ${fd.precio}€`
@@ -3713,10 +3760,17 @@
   })();
 
   function switchDashTab(tab) {
-    document.getElementById('dtab-panel-obra').style.display = tab === 'obra' ? 'block' : 'none';
-    document.getElementById('dtab-panel-form').style.display = tab === 'form' ? 'block' : 'none';
-    document.getElementById('dtab-obra').classList.toggle('active', tab === 'obra');
-    document.getElementById('dtab-form').classList.toggle('active', tab === 'form');
+    const tabs   = ['solicitudes', 'obras', 'subir', 'form'];
+    const panels = { solicitudes: 'dpanel-solicitudes', obras: 'dpanel-obras', subir: 'dpanel-subir', form: 'dpanel-form' };
+    tabs.forEach(t => {
+      const btn = document.getElementById('dtab-' + t);
+      const panel = document.getElementById(panels[t]);
+      if (btn) btn.classList.toggle('active', t === tab);
+      if (panel) panel.style.display = t === tab ? 'block' : 'none';
+    });
+    // cargar datos al entrar en cada pestaña
+    if (tab === 'solicitudes') buildRequests();
+    if (tab === 'obras') loadMyArtworks();
   }
 
   // ===== FIRST VISIT BUBBLE =====
