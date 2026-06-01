@@ -2755,7 +2755,7 @@
     const email = document.getElementById('inp-email')?.value?.trim();
     if (!email) { showAuthError('Escribe tu email arriba y vuelve a pulsar el enlace.'); return; }
     const { error } = await supa.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://the-alter-life.vercel.app'
+      redirectTo: 'https://thealterlife.app'
     });
     if (error) {
       showAuthError('No se pudo enviar el email. Inténtalo de nuevo.');
@@ -2770,7 +2770,7 @@
     pendingArtistOnboard = isArtist;
     const { error } = await supa.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: 'https://the-alter-life.vercel.app' }
+      options: { redirectTo: 'https://thealterlife.app' }
     });
     if (error) showAuthError('Error al conectar con Google. Inténtalo de nuevo.');
   }
@@ -2779,7 +2779,7 @@
     pendingArtistOnboard = isArtist;
     const { error } = await supa.auth.signInWithOAuth({
       provider: 'discord',
-      options: { redirectTo: 'https://the-alter-life.vercel.app' }
+      options: { redirectTo: 'https://thealterlife.app' }
     });
     if (error) showAuthError('Error al conectar con Discord. Inténtalo de nuevo.');
   }
