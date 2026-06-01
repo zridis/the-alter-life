@@ -1963,6 +1963,28 @@
           <input class="inp" type="text" id="aw-price" placeholder="Ej: 45">
         </div>
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:0.8rem">
+        <div class="field">
+          <label class="field-label">Tipo de obra</label>
+          <select class="sel" id="aw-tipo">
+            <option value="">Sin especificar</option>
+            <option value="Token">Token</option>
+            <option value="Full art">Full art</option>
+            <option value="Alter básico">Alter básico</option>
+            <option value="Basic land">Basic land</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Técnica</label>
+          <select class="sel" id="aw-tecnica">
+            <option value="">Sin especificar</option>
+            <option value="Acuarela">Acuarela</option>
+            <option value="Acrílico">Acrílico</option>
+            <option value="Digital">Digital</option>
+            <option value="Mixta">Mixta</option>
+          </select>
+        </div>
+      </div>
       <div class="upload" id="aw-upload-area" style="margin-bottom:1.2rem;cursor:pointer" onclick="document.getElementById('aw-file').click()">
         <div class="upload-ic">↑</div>
         <div class="upload-tx" id="aw-upload-tx">Toca para elegir imagen · JPG o PNG</div>
@@ -3248,10 +3270,12 @@
       alert('Debes iniciar sesión.');
       return;
     }
-    const title  = document.getElementById('aw-title').value.trim();
-    const game   = document.getElementById('aw-game').value;
-    const status = document.getElementById('aw-status').value;
+    const title    = document.getElementById('aw-title').value.trim();
+    const game     = document.getElementById('aw-game').value;
+    const status   = document.getElementById('aw-status').value;
     const priceRaw = document.getElementById('aw-price').value.trim();
+    const tipo     = document.getElementById('aw-tipo')?.value || '';
+    const tecnica  = document.getElementById('aw-tecnica')?.value || '';
     const btn = document.getElementById('aw-publish-btn');
     const msg = document.getElementById('aw-publish-msg');
 
@@ -3289,11 +3313,13 @@
     // 4. insert artwork row
     const { error: insErr } = await supa.from('artworks').insert({
       artist_id: currentUser.id,
-      title: title,
-      game: game,
-      status: status,
-      price: price,
-      image_url: imageUrl
+      title:     title,
+      game:      game,
+      status:    status,
+      price:     price,
+      image_url: imageUrl,
+      tipo:      tipo || null,
+      tecnica:   tecnica || null
     });
 
     btn.disabled = false;
@@ -3308,6 +3334,8 @@
     // success — reset form
     document.getElementById('aw-title').value = '';
     document.getElementById('aw-price').value = '';
+    if (document.getElementById('aw-tipo')) document.getElementById('aw-tipo').value = '';
+    if (document.getElementById('aw-tecnica')) document.getElementById('aw-tecnica').value = '';
     document.getElementById('aw-preview').style.display = 'none';
     document.getElementById('aw-upload-tx').textContent = 'Toca para elegir imagen · JPG o PNG';
     selectedArtworkFile = null;
@@ -3671,7 +3699,7 @@
 
     // cerrar dropdown y filtrar el muro
     toggleGameDD();
-    filterMuro();
+    applyFilterToMuro();
   }
 
   // filtra las obras ya cargadas sin ir a Supabase otra vez
@@ -3727,11 +3755,86 @@
   function applyFilters() {
     closeFilters();
     renderTags();
+    applyFilterToMuro();
   }
+
+  function applyFilterToMuro() {
+    const wall = document.getElementById('home-wall');
+    if (!wall || !allArtworks.length) return;
+
+    // recoger filtros activos
+    const activeTypes  = [];
+    const activeTechs  = [];
+    const activeStates = [];
+    let   orderBy = 'reciente';
+
+    document.querySelectorAll('.popup-opt.on').forEach(o => {
+      const txt = o.textContent.trim();
+      const section = o.closest('.popup-section');
+      const sTitle  = section?.querySelector('.popup-section-title')?.textContent.trim();
+      if (sTitle === 'Tipo de obra')  activeTypes.push(txt.toLowerCase());
+      if (sTitle === 'Técnica')       activeTechs.push(txt.toLowerCase());
+      if (sTitle === 'Estado')        activeStates.push(txt.toLowerCase());
+      if (sTitle === 'Ordenar por')   orderBy = txt.toLowerCase();
+    });
+
+    const stateMap = { 'en venta': 'for_sale', 'vendida': 'sold', 'portfolio': 'portfolio' };
+
+    let filtered = [...allArtworks];
+
+    if (activeTypes.length)  filtered = filtered.filter(p => activeTypes.includes((p.tipo || '').toLowerCase()));
+    if (activeTechs.length)  filtered = filtered.filter(p => activeTechs.includes((p.tecnica || '').toLowerCase()));
+    if (activeStates.length) filtered = filtered.filter(p => {
+      const st = p.status || p.state || '';
+      return activeStates.some(a => stateMap[a] === st || a === st);
+    });
+
+    // también aplicar filtro de juego si hay seleccionado
+    const games = [...selectedGames];
+    const gameMap = { magic: 'magic', pokemon: 'pokémon', lorcana: 'lorcana', onepiece: 'one piece', yugioh: 'yu-gi-oh!' };
+    if (!games.includes('all')) {
+      filtered = filtered.filter(p => {
+        const g = (p.game || '').toLowerCase();
+        return games.some(sg => g.includes(gameMap[sg] || sg));
+      });
+    }
+
+    // ordenar
+    if (orderBy === 'top valorados')    filtered.sort((a,b) => (b.score||0) - (a.score||0));
+    else if (orderBy === 'precio: menor') filtered.sort((a,b) => (a.price||9999) - (b.price||9999));
+    else if (orderBy === 'precio: mayor') filtered.sort((a,b) => (b.price||0) - (a.price||0));
+
+    const stCls = { for_sale:'badge-sale', sold:'badge-sold', portfolio:'badge-folio' };
+    const stLbl = { for_sale:'En venta', sold:'Vendida', portfolio:'Portfolio' };
+
+    if (filtered.length === 0) {
+      wall.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem 0;color:var(--text-mute);font-size:0.9rem">No hay obras con estos filtros.</div>`;
+      return;
+    }
+
+    wall.innerHTML = filtered.map((p, i) => {
+      const st  = p.status || p.state || 'portfolio';
+      const idx = allArtworks.indexOf(p);
+      return `<div class="pin" onclick="openModal(${idx})">
+        <div class="pin-card">
+          ${p.image_url ? `<img src="${p.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:14px 14px 0 0" loading="lazy">` : `<div class="pin-art a${(i%10)+1}" style="width:100%;height:100%"></div>`}
+          <div class="pin-badge ${stCls[st]||'badge-folio'}">${stLbl[st]||'Portfolio'}</div>
+          <button class="pin-save" onclick="event.stopPropagation();saveArtwork('${p.id}',this)">♡</button>
+        </div>
+        <div class="pin-meta">
+          <div class="pin-title">${p.title}</div>
+          <div class="pin-sub">${p.artists?.display_name || p.artist || ''}</div>
+          ${p.price ? `<div class="pin-price">${p.price}€</div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
   function clearFilters() {
     document.querySelectorAll('.popup-opt').forEach(o => o.classList.remove('on'));
     document.querySelector('#order-opts .popup-opt').classList.add('on');
     renderTags();
+    loadMuro(); // volver a mostrar todo
   }
   function selectOrder(btn) {
     document.querySelectorAll('#order-opts .popup-opt').forEach(o => o.classList.remove('on'));
