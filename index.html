@@ -3617,8 +3617,12 @@
             <div class="request-title">${title}</div>
             <div class="request-time">${time}</div>
           </div>
-          <div class="request-client">de ${clientName}</div>
-          ${clientEmail ? `<a class="request-email" href="mailto:${clientEmail}">${clientEmail}</a>` : ''}
+          <div class="request-client">
+            ${clientEmail 
+              ? `<a class="request-email" href="mailto:${clientEmail}">${clientEmail}</a>`
+              : 'Usuario desconocido'
+            }
+          </div>
           <div class="request-preview">${preview}</div>
           ${actions}
           ${statusBadge}
