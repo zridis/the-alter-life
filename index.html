@@ -1426,7 +1426,7 @@
   </div>
   <div class="topbar-r">
     <span class="nav-lnk active" id="nl-home" onclick="go('home')" style="display:none">Explorar</span>
-    <button class="btn-pill btn-ghost" onclick="go('auth')" id="btn-entrar">Entrar</button>
+    <button class="btn-pill btn-ghost" onclick="currentUser ? go('home') : (go('auth'), authMode('login'))" id="btn-entrar">Entrar</button>
     <div class="user-menu" id="user-menu" style="display:none">
       <div class="av" id="user-av" onclick="toggleUserMenu()">🎨</div>
       <div class="user-dropdown" id="user-dropdown">
@@ -3629,7 +3629,7 @@
   function selectGame(el) {
     const game = el.dataset.game;
     const logo = el.dataset.logo;
-    const ic = el.dataset.ic;
+    const ic   = el.dataset.ic;
 
     if (game === 'all') {
       selectedGames.clear();
@@ -3668,6 +3668,51 @@
         document.getElementById('game-dd-label').textContent = sel.length + ' juegos';
       }
     }
+
+    // cerrar dropdown y filtrar el muro
+    toggleGameDD();
+    filterMuro();
+  }
+
+  // filtra las obras ya cargadas sin ir a Supabase otra vez
+  function filterMuro() {
+    const wall = document.getElementById('home-wall');
+    if (!wall || !allArtworks.length) return;
+
+    const games = [...selectedGames];
+    const gameMap = { magic: 'magic', pokemon: 'pokémon', lorcana: 'lorcana', onepiece: 'one piece', yugioh: 'yu-gi-oh!' };
+
+    const filtered = games.includes('all')
+      ? allArtworks
+      : allArtworks.filter(p => {
+          const g = (p.game || '').toLowerCase();
+          return games.some(sg => g.includes(gameMap[sg] || sg));
+        });
+
+    const stCls = { for_sale:'badge-sale', sold:'badge-sold', portfolio:'badge-folio', sale:'badge-sale', folio:'badge-folio' };
+    const stLbl = { for_sale:'En venta', sold:'Vendida', portfolio:'Portfolio', sale:'En venta', folio:'Portfolio' };
+
+    if (filtered.length === 0) {
+      wall.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem 0;color:var(--text-mute);font-size:0.9rem">No hay obras de este juego todavía.</div>`;
+      return;
+    }
+
+    wall.innerHTML = filtered.map((p, i) => {
+      const st = p.status || p.state || 'portfolio';
+      const idx = allArtworks.indexOf(p);
+      return `<div class="pin" onclick="openModal(${idx})">
+        <div class="pin-card">
+          ${p.image_url ? `<img src="${p.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:14px 14px 0 0" loading="lazy">` : `<div class="pin-art a${(i%10)+1}" style="width:100%;height:100%"></div>`}
+          <div class="pin-badge ${stCls[st]||'badge-folio'}">${stLbl[st]||'Portfolio'}</div>
+          <button class="pin-save" onclick="event.stopPropagation();saveArtwork('${p.id}',this)">♡</button>
+        </div>
+        <div class="pin-meta">
+          <div class="pin-title">${p.title}</div>
+          <div class="pin-sub">${p.artists?.display_name || p.artist || ''}</div>
+          ${p.price ? `<div class="pin-price">${p.price}€</div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
   }
 
   // ===== FILTER POPUP =====
