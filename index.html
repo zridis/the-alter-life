@@ -3543,7 +3543,7 @@
     container.innerHTML = commissions.map(c => {
       const fd = c.form_data || {};
       const isCompra = fd.tipo === 'compra_directa';
-      const clientName = clientNames[c.client_id] || 'Usuario';
+      const clientName = clientNames[c.client_id] || c.form_data?.client_name || c.form_data?.email || 'Usuario';
       const title = isCompra ? `Compra: ${fd.obra_titulo || 'obra'}` : 'Solicitud de encargo';
       const preview = isCompra
         ? `Quiere comprar "${fd.obra_titulo}" por ${fd.precio}€`
@@ -3593,7 +3593,7 @@
     if (error) { btn.disabled = false; alert('No se pudo aceptar. Inténtalo de nuevo.'); return; }
     const card = btn.closest('.request-card');
     card.style.borderColor = 'rgba(63,174,106,0.4)';
-    card.querySelector('.request-actions').outerHTML = '<span style="font-size:0.78rem;color:var(--green)">✓ Aceptado — el cliente recibirá tu email</span>';
+    card.querySelector('.request-actions').outerHTML = '<span style="font-size:0.78rem;color:var(--green)">✓ Aceptado — ponte en contacto con el cliente</span>';
   }
 
   async function declineRequest(id, btn) {
