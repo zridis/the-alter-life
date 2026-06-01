@@ -3530,15 +3530,31 @@
       else badge.style.display = 'none';
     }
 
+    // cargar imágenes de obras para compras directas
+    const obraIds = commissions
+      .filter(c => c.form_data?.tipo === 'compra_directa' && c.form_data?.obra_id)
+      .map(c => c.form_data.obra_id);
+    let obraImgs = {};
+    if (obraIds.length) {
+      const { data: obras } = await supa.from('artworks').select('id, image_url').in('id', obraIds);
+      (obras || []).forEach(o => { obraImgs[o.id] = o.image_url; });
+    }
+
     container.innerHTML = commissions.map(c => {
       const fd = c.form_data || {};
       const isCompra = fd.tipo === 'compra_directa';
       const clientName = clientNames[c.client_id] || 'Usuario';
-      const title = isCompra ? `🛒 Compra: ${fd.obra_titulo || 'obra'}` : 'Solicitud de encargo';
+      const title = isCompra ? `Compra: ${fd.obra_titulo || 'obra'}` : 'Solicitud de encargo';
       const preview = isCompra
         ? `Quiere comprar "${fd.obra_titulo}" por ${fd.precio}€`
         : (fd.mensaje || fd.descripcion || Object.values(fd).filter(v=>typeof v==='string').slice(0,1)[0] || 'Sin detalles');
       const time = timeAgo(c.created_at);
+
+      // thumbnail: imagen de la obra si es compra, emoji si es encargo
+      const imgUrl = isCompra && fd.obra_id ? obraImgs[fd.obra_id] : null;
+      const thumbHtml = imgUrl
+        ? `<img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`
+        : `<span style="font-size:1.4rem">${isCompra ? '🛒' : '🎨'}</span>`;
 
       let statusBadge = '';
       let actions = '';
@@ -3556,7 +3572,7 @@
 
       return `
       <div class="request-card" data-id="${c.id}">
-        <div class="request-thumb ${isCompra ? 'rt-buy' : 'rt-commission'}">${isCompra ? '🛒' : '🎨'}</div>
+        <div class="request-thumb ${isCompra ? 'rt-buy' : 'rt-commission'}">${thumbHtml}</div>
         <div class="request-body">
           <div class="request-top">
             <div class="request-title">${title}</div>
