@@ -848,6 +848,12 @@
   .request-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.25rem; }
   .request-title { font-size: 0.9rem; font-weight: 600; }
   .request-time { font-size: 0.74rem; color: var(--text-mute); white-space: nowrap; }
+  .request-email {
+    font-size: 0.78rem; color: #f0913a;
+    text-decoration: none; display: block;
+    margin: 0.1rem 0 0.4rem;
+  }
+  .request-email:hover { text-decoration: underline; }
   .request-client { font-size: 0.78rem; color: var(--text-mute); margin-bottom: 0.5rem; }
   .request-preview { font-size: 0.82rem; color: var(--text-dim); line-height: 1.5; margin-bottom: 0.7rem; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .request-actions { display: flex; gap: 0.5rem; }
@@ -3542,12 +3548,16 @@
       return;
     }
 
-    // cargar nombres de los clientes (consulta aparte para no depender del nombre de la FK)
+    // cargar nombres y emails de los clientes
     const clientIds = [...new Set(commissions.map(c => c.client_id).filter(Boolean))];
-    let clientNames = {};
+    let clientNames  = {};
+    let clientEmails = {};
     if (clientIds.length) {
-      const { data: profs } = await supa.from('profiles').select('id, username').in('id', clientIds);
-      (profs || []).forEach(p => { clientNames[p.id] = p.username; });
+      const { data: profs } = await supa.from('profiles').select('id, username, email').in('id', clientIds);
+      (profs || []).forEach(p => {
+        clientNames[p.id]  = p.username;
+        clientEmails[p.id] = p.email;
+      });
     }
 
     // contador de nuevas (pendientes)
@@ -3571,7 +3581,8 @@
     container.innerHTML = commissions.map(c => {
       const fd = c.form_data || {};
       const isCompra = fd.tipo === 'compra_directa';
-      const clientName = clientNames[c.client_id] || c.form_data?.client_name || c.form_data?.email || 'Usuario';
+      const clientName  = clientNames[c.client_id]  || c.form_data?.client_name || 'Usuario';
+      const clientEmail = clientEmails[c.client_id] || c.form_data?.client_email || null;
       const title = isCompra ? `Compra: ${fd.obra_titulo || 'obra'}` : 'Solicitud de encargo';
       const preview = isCompra
         ? `Quiere comprar "${fd.obra_titulo}" por ${fd.precio}€`
@@ -3607,6 +3618,7 @@
             <div class="request-time">${time}</div>
           </div>
           <div class="request-client">de ${clientName}</div>
+          ${clientEmail ? `<a class="request-email" href="mailto:${clientEmail}">${clientEmail}</a>` : ''}
           <div class="request-preview">${preview}</div>
           ${actions}
           ${statusBadge}
