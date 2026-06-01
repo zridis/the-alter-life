@@ -1698,6 +1698,18 @@
   </div>
 </div>
 
+<!-- ===== FORM SENT ===== -->
+<div class="page" id="page-form-sent">
+  <div style="max-width:420px;margin:4rem auto;padding:0 1.5rem;text-align:center">
+    <div style="font-size:3rem;margin-bottom:1rem">🎨</div>
+    <div style="font-size:1.3rem;font-weight:700;margin-bottom:0.6rem">¡Solicitud enviada!</div>
+    <div style="font-size:0.9rem;color:var(--text-mute);line-height:1.6;margin-bottom:2rem">
+      El artista recibirá tu solicitud y se pondrá en contacto contigo en breve.
+    </div>
+    <button class="btn-block primary" style="max-width:200px;margin:0 auto" onclick="go('home')">Volver al muro</button>
+  </div>
+</div>
+
 <!-- ===== EMAIL CONFIRM ===== -->
 <div class="page" id="page-confirm">
   <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;padding:2rem;text-align:center;max-width:420px;margin:0 auto">
@@ -3507,25 +3519,55 @@
   }
 
   async function submitForm() {
-    // Collect form data
+    if (!currentUser) {
+      go('auth');
+      authMode('login');
+      return;
+    }
+
+    const btn = document.querySelector('#page-form .btn-block.primary');
+    if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+
+    // recoger campos de texto
     const inputs = document.querySelectorAll('#page-form .inp, #page-form .txt');
     const formData = {};
-    inputs.forEach((inp, i) => { formData[`campo_${i+1}`] = inp.value; });
-
-    const clientEmail = currentUser?.email || formData.campo_1 || '';
-    const clientName  = currentUser ? (document.getElementById('user-av')?.textContent || 'Cliente') : 'Visitante';
-
-    // Save to Supabase
-    const { error } = await supa.from('commissions').insert({
-      artist_id: null, // TODO: get from current profile page
-      client_id: currentUser?.id || null,
-      client_name: clientName,
-      client_email: clientEmail,
-      form_data: formData,
-      status: 'pending'
+    inputs.forEach((inp) => {
+      const label = inp.closest('.field')?.querySelector('.field-label')?.textContent?.trim() || inp.id;
+      if (inp.value.trim()) formData[label] = inp.value.trim();
     });
 
-    go('confirm');
+    // subir imágenes de referencia si las hay
+    const fileInputs = document.querySelectorAll('#page-form input[type="file"]');
+    for (const fi of fileInputs) {
+      if (fi.files && fi.files[0]) {
+        const file = fi.files[0];
+        const path = `references/${currentUser.id}/${Date.now()}_${file.name}`;
+        const { data: upData, error: upErr } = await supa.storage.from('artworks').upload(path, file, { upsert: true });
+        if (!upErr) {
+          const { data: urlData } = supa.storage.from('artworks').getPublicUrl(path);
+          const label = fi.closest('.field')?.querySelector('.field-label')?.textContent?.trim() || 'Imagen';
+          formData[label] = urlData.publicUrl;
+        }
+      }
+    }
+
+    const { error } = await supa.from('commissions').insert({
+      artist_id:    currentProfileId || null,
+      client_id:    currentUser.id,
+      client_email: currentUser.email,
+      form_data:    formData,
+      status:       'pending'
+    });
+
+    if (btn) { btn.disabled = false; btn.textContent = 'Enviar solicitud'; }
+
+    if (error) {
+      alert('No se pudo enviar la solicitud. Inténtalo de nuevo.');
+      return;
+    }
+
+    // mostrar pantalla de éxito
+    go('form-sent');
   }
 
   // ===== REQUESTS =====
