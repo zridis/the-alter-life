@@ -843,12 +843,12 @@
 
   /* ===== END PRIVACY ===== */
   /* ===== EXPANDABLE REQUEST CARDS ===== */
-  .request-head { display:flex;gap:0.8rem;cursor:pointer;align-items:flex-start; }
-  .req-chevron { color:var(--text-mute);font-size:0.9rem;transition:transform 0.2s;flex-shrink:0;margin-top:0.2rem; }
+  .request-head { display:flex;gap:0.8rem;cursor:pointer;align-items:center; }
+  .req-chevron { color:var(--text-mute);font-size:0.85rem;transition:transform 0.2s;flex-shrink:0; }
   .request-card.expanded .req-chevron { transform:rotate(180deg); }
   .req-details {
     max-height:0;overflow:hidden;transition:max-height 0.3s ease, margin 0.3s ease, padding 0.3s ease;
-    margin:0;padding:0 0 0 calc(48px + 0.8rem);
+    margin:0;padding:0 0 0 calc(52px + 0.8rem);
   }
   .request-card.expanded .req-details {
     max-height:1200px;margin-top:0.8rem;padding-bottom:0.4rem;
@@ -879,31 +879,43 @@
   }
 
   .request-card {
-    display: flex; gap: 1rem;
-    padding: 1rem;
+    padding: 0.9rem 1rem;
     background: var(--surface); border: 1px solid var(--border-soft);
-    border-radius: 12px; margin-bottom: 0.7rem;
+    border-radius: 14px; margin-bottom: 0.7rem;
     transition: border-color 0.15s;
   }
   .request-card:hover { border-color: var(--border); }
   .request-thumb {
-    width: 56px; flex-shrink: 0;
-    aspect-ratio: 63/88; border-radius: 7px;
-    border: 1px solid var(--border);
+    width: 52px; height: 52px; flex-shrink: 0;
+    border-radius: 9px; border: 1px solid var(--border);
+    overflow: hidden;
   }
   .request-body { flex: 1; min-width: 0; }
-  .request-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.25rem; }
-  .request-title { font-size: 0.9rem; font-weight: 600; }
-  .request-time { font-size: 0.74rem; color: var(--text-mute); white-space: nowrap; }
-  .request-email {
-    font-size: 0.78rem; color: #f0913a;
-    text-decoration: none; display: block;
-    margin: 0.1rem 0 0.4rem;
+  .request-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.35rem; }
+  .req-status {
+    font-size: 0.68rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.03em; padding: 0.16rem 0.5rem; border-radius: 999px;
   }
+  .rs-pending   { background: rgba(240,145,58,0.16); color: #f0913a; }
+  .rs-accepted  { background: rgba(63,174,106,0.16); color: var(--green); }
+  .rs-completed { background: rgba(110,130,255,0.16); color: #8b9bff; }
+  .rs-cancelled { background: var(--surface-2); color: var(--text-mute); }
+  .request-title { font-size: 0.92rem; font-weight: 600; margin-bottom: 0.15rem; }
+  .request-time { font-size: 0.74rem; color: var(--text-mute); white-space: nowrap; }
+  .request-email { font-size: 0.78rem; color: #f0913a; text-decoration: none; }
   .request-email:hover { text-decoration: underline; }
-  .request-client { font-size: 0.78rem; color: var(--text-mute); margin-bottom: 0.5rem; }
-  .request-preview { font-size: 0.82rem; color: var(--text-dim); line-height: 1.5; margin-bottom: 0.7rem; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-  .request-actions { display: flex; gap: 0.5rem; }
+  .request-client { font-size: 0.78rem; color: var(--text-mute); }
+  .request-preview { font-size: 0.83rem; color: var(--text-dim); line-height: 1.5; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .request-actions { display: flex; gap: 0.5rem; margin-top: 0.9rem; padding-left: calc(52px + 0.8rem); }
+  .req-btn {
+    font-size: 0.8rem; font-weight: 500;
+    padding: 0.5rem 1rem; border-radius: 9px;
+    cursor: pointer; border: none; transition: all 0.15s; flex: 0 0 auto;
+  }
+  .req-btn-primary { background: var(--text); color: var(--bg); }
+  .req-btn-primary:hover { opacity: 0.85; }
+  .req-btn-ghost { background: transparent; color: var(--text-mute); border: 1px solid var(--border); }
+  .req-btn-ghost:hover { color: var(--text); border-color: var(--text-dim); }
   .btn-sm {
     font-size: 0.78rem; font-weight: 500;
     padding: 0.42rem 0.85rem; border-radius: 8px;
@@ -1376,9 +1388,8 @@
     .dash-stats { grid-template-columns: 1fr; gap: 0.6rem; }
     .dash-head { gap: 0.6rem; }
     .dash-title { font-size: 1.4rem; }
-    .request-card { flex-direction: column; }
-    .request-thumb { width: 100%; aspect-ratio: 16/7; }
-    .request-actions { flex-wrap: wrap; }
+    .request-actions { flex-wrap: wrap; padding-left: 0; }
+    .req-btn { flex: 1 1 auto; }
 
     /* form builder — allow wrap */
     .fb-field { flex-wrap: wrap; }
@@ -1705,14 +1716,14 @@
 
   <div class="profile-divider"></div>
 
-  <!-- reviews section -->
-  <div class="reviews-wrap">
+  <!-- reviews section (desactivada por ahora — pendiente sistema de likes) -->
+  <div class="reviews-wrap" style="display:none">
     <div class="reviews-head">
       <div>
         <div class="reviews-title">Valoraciones</div>
         <div class="reviews-sub" id="profile-reviews-sub"><b>—</b> de 5</div>
       </div>
-      <button class="btn-pill btn-ghost" onclick="openRating()">Valorar a este artista</button>
+      <button class="btn-pill btn-ghost" onclick="openRating()" style="display:none">Valorar a este artista</button>
     </div>
     <div class="reviews-list" id="profile-reviews-list">
       <div style="font-size:0.82rem;color:var(--text-mute);padding:0.5rem 0">Aún no hay valoraciones.</div>
@@ -3857,22 +3868,27 @@
            </div>`
         : `<div class="req-details"><div style="font-size:0.8rem;color:var(--text-mute)">Sin detalles adicionales.</div></div>`;
 
+      // estado: badge de color
+      const statusInfo = {
+        pending:   { label: 'Nueva',     cls: 'rs-pending' },
+        accepted:  { label: 'Aceptada',  cls: 'rs-accepted' },
+        completed: { label: 'Terminada', cls: 'rs-completed' },
+        cancelled: { label: 'Cancelada', cls: 'rs-cancelled' },
+        declined:  { label: 'Rechazada', cls: 'rs-cancelled' },
+      }[c.status] || { label: c.status, cls: 'rs-cancelled' };
+
       // acciones según estado
       let actions = '';
       if (c.status === 'pending') {
         actions = `<div class="request-actions">
-          <button class="btn-sm btn-accept" onclick="event.stopPropagation();acceptRequest('${c.id}')">✓ Aceptar</button>
-          <button class="btn-sm btn-decline" onclick="event.stopPropagation();setReqStatus('${c.id}','declined')">Rechazar</button>
+          <button class="req-btn req-btn-primary" onclick="event.stopPropagation();acceptRequest('${c.id}')">Aceptar encargo</button>
+          <button class="req-btn req-btn-ghost" onclick="event.stopPropagation();setReqStatus('${c.id}','declined')">Rechazar</button>
         </div>`;
       } else if (c.status === 'accepted') {
         actions = `<div class="request-actions">
-          <span style="font-size:0.74rem;color:var(--green);align-self:center">✓ Aceptado</span>
-          <button class="btn-sm btn-accept" onclick="event.stopPropagation();setReqStatus('${c.id}','completed')">Marcar terminada</button>
-          <button class="btn-sm btn-decline" onclick="event.stopPropagation();setReqStatus('${c.id}','cancelled')">Cancelar</button>
+          <button class="req-btn req-btn-primary" onclick="event.stopPropagation();setReqStatus('${c.id}','completed')">Marcar terminada</button>
+          <button class="req-btn req-btn-ghost" onclick="event.stopPropagation();setReqStatus('${c.id}','cancelled')">Cancelar</button>
         </div>`;
-      } else {
-        const lbl = { completed:'✓ Terminada', cancelled:'Cancelada', declined:'Rechazada' };
-        actions = `<div style="font-size:0.74rem;color:var(--text-mute);margin-top:0.4rem">${lbl[c.status]||c.status}</div>`;
       }
 
       return `
@@ -3881,9 +3897,10 @@
           <div class="request-thumb ${isCompra ? 'rt-buy' : 'rt-commission'}">${thumbHtml}</div>
           <div class="request-body">
             <div class="request-top">
-              <div class="request-title">${title}</div>
-              <div class="request-time">${time}</div>
+              <span class="req-status ${statusInfo.cls}">${statusInfo.label}</span>
+              <span class="request-time">${time}</span>
             </div>
+            <div class="request-title">${title}</div>
             <div class="request-preview">${preview}</div>
           </div>
           <span class="req-chevron">▾</span>
