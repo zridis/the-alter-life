@@ -842,6 +842,30 @@
   .cookie-btns  { display:flex;gap:0.5rem;flex-shrink:0; }
 
   /* ===== END PRIVACY ===== */
+  /* ===== EXPANDABLE REQUEST CARDS ===== */
+  .request-head { display:flex;gap:0.8rem;cursor:pointer;align-items:flex-start; }
+  .req-chevron { color:var(--text-mute);font-size:0.9rem;transition:transform 0.2s;flex-shrink:0;margin-top:0.2rem; }
+  .request-card.expanded .req-chevron { transform:rotate(180deg); }
+  .req-details {
+    max-height:0;overflow:hidden;transition:max-height 0.3s ease, margin 0.3s ease, padding 0.3s ease;
+    margin:0;padding:0 0 0 calc(48px + 0.8rem);
+  }
+  .request-card.expanded .req-details {
+    max-height:1200px;margin-top:0.8rem;padding-bottom:0.4rem;
+  }
+  .req-detail-row { display:flex;gap:0.6rem;padding:0.4rem 0;border-top:1px solid var(--border-soft);font-size:0.82rem; }
+  .req-detail-k { color:var(--text-mute);min-width:90px;flex-shrink:0;text-transform:capitalize; }
+  .req-detail-v { color:var(--text-dim);line-height:1.5;word-break:break-word; }
+  .req-detail-img { max-width:120px;border-radius:8px;margin-top:0.2rem; }
+  .request-card.expanded .request-actions { margin-top:0.8rem; }
+  .archive-toggle {
+    width:100%;padding:0.6rem;margin-top:0.8rem;background:none;border:1px dashed var(--border);
+    border-radius:10px;color:var(--text-mute);font-size:0.8rem;cursor:pointer;transition:all 0.15s;
+  }
+  .archive-toggle:hover { color:var(--text);border-color:var(--text-dim); }
+  .archived-list { margin-top:0.8rem;opacity:0.7; }
+
+  /* ===== END REQUESTS ===== */
   .dash-section-title {
     font-size: 0.88rem; font-weight: 600;
     color: var(--text-dim); margin-bottom: 0.9rem;
@@ -2091,15 +2115,15 @@
 <!-- ===== PRIVACY PAGE ===== -->
 <div class="page" id="page-privacy">
   <div class="ob-wrap" style="max-width:680px">
-    <span class="nav-lnk" style="display:inline-block;margin-bottom:1.5rem;padding-left:0" onclick="history.back()">← Volver</span>
+    <span class="nav-lnk" style="display:inline-block;margin-bottom:1.5rem;padding-left:0;cursor:pointer" onclick="go('home')">← Volver al inicio</span>
     <h1 style="font-family:'Fraunces',serif;font-size:1.8rem;font-weight:600;margin-bottom:0.4rem">Política de Privacidad</h1>
     <p style="font-size:0.8rem;color:var(--text-mute);margin-bottom:2rem">Última actualización: junio de 2026</p>
 
     <div class="privacy-section">
       <h2>1. Responsable del tratamiento</h2>
-      <p>Joan Vandellos Garcia<br>
-      Carrer de Bernat Bransi, 42, Barcelona 08032, España<br>
+      <p>The Alter Life<br>
       Contacto: <a href="mailto:hola@thealterlife.app">hola@thealterlife.app</a></p>
+      <p style="font-size:0.78rem;color:var(--text-mute)">Para ejercer tus derechos o solicitar los datos identificativos completos del responsable, escríbenos al email de contacto.</p>
     </div>
 
     <div class="privacy-section">
@@ -2852,12 +2876,14 @@
         // login normal, confirmación de email, u OAuth
         const dest = pendingArtistOnboard ? 'onboard' : 'home';
         pendingArtistOnboard = false;
-        hydrateUser(session.user.id, dest);
+        hydrateUser(session.user.id, dest, true);
       } else if (event === 'INITIAL_SESSION') {
         // ya había sesión al cargar la página — no forzar navegación
-        hydrateUser(session.user.id, null);
+        hydrateUser(session.user.id, null, true);
       } else if (event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
-        hydrateUser(session.user.id, null);
+        // refresh de token (p.ej. al volver a la pestaña) — NO recargar el muro
+        // para no resetear los filtros que el usuario tenga puestos
+        hydrateUser(session.user.id, null, false);
       }
     } else {
       // sin sesión
@@ -2868,7 +2894,7 @@
 
   // --- Cargar datos del usuario y (opcionalmente) navegar ---
   // La navegación va PRIMERO para que nunca falle por culpa de los datos.
-  async function hydrateUser(userId, dest) {
+  async function hydrateUser(userId, dest, reloadMuro = true) {
     if (dest === 'onboard')   go('onboard');
     else if (dest === 'home') go('home');
 
@@ -2902,7 +2928,7 @@
       const dash = document.getElementById('udd-dash');
       if (dash) dash.style.display = 'flex';
     }
-    loadMuro();
+    if (reloadMuro) loadMuro();
   }
 
   // alias por compatibilidad con el resto del código que aún llama loadUserProfile
@@ -3746,6 +3772,8 @@
   }
 
   // ===== REQUESTS =====
+  let showArchivedRequests = false;
+
   async function buildRequests() {
     const container = document.getElementById('requests');
     if (!container || !currentUser) return;
@@ -3756,28 +3784,27 @@
       .eq('artist_id', currentUser.id)
       .order('created_at', { ascending: false });
 
-    console.log('[requests] error:', error, 'count:', commissions?.length);
-
     if (error || !commissions || commissions.length === 0) {
       container.innerHTML = `<div style="font-size:0.82rem;color:var(--text-mute);padding:0.8rem 0">Aún no tienes solicitudes. Cuando alguien te encargue o quiera comprar una obra, aparecerá aquí.</div>`;
-      const badge = document.querySelector('.dash-badge');
+      const badge = document.getElementById('solicitudes-badge');
       if (badge) badge.style.display = 'none';
       return;
     }
 
+    // separar activas de archivadas (terminadas/canceladas)
+    const archivedStates = ['completed', 'cancelled', 'declined'];
+    const active   = commissions.filter(c => !archivedStates.includes(c.status));
+    const archived = commissions.filter(c =>  archivedStates.includes(c.status));
+
     // cargar nombres y emails de los clientes
     const clientIds = [...new Set(commissions.map(c => c.client_id).filter(Boolean))];
-    let clientNames  = {};
-    let clientEmails = {};
+    let clientNames = {}, clientEmails = {};
     if (clientIds.length) {
       const { data: profs } = await supa.from('profiles').select('id, username, email').in('id', clientIds);
-      (profs || []).forEach(p => {
-        clientNames[p.id]  = p.username;
-        clientEmails[p.id] = p.email;
-      });
+      (profs || []).forEach(p => { clientNames[p.id] = p.username; clientEmails[p.id] = p.email; });
     }
 
-    // contador de nuevas (pendientes)
+    // badge: solo pendientes
     const pending = commissions.filter(c => c.status === 'pending').length;
     const badge = document.getElementById('solicitudes-badge');
     if (badge) {
@@ -3785,85 +3812,119 @@
       else badge.style.display = 'none';
     }
 
-    // cargar imágenes de obras para compras directas
-    const obraIds = commissions
-      .filter(c => c.form_data?.tipo === 'compra_directa' && c.form_data?.obra_id)
-      .map(c => c.form_data.obra_id);
+    // imágenes de obras para compras directas
+    const obraIds = commissions.filter(c => c.form_data?.tipo === 'compra_directa' && c.form_data?.obra_id).map(c => c.form_data.obra_id);
     let obraImgs = {};
     if (obraIds.length) {
       const { data: obras } = await supa.from('artworks').select('id, image_url').in('id', obraIds);
       (obras || []).forEach(o => { obraImgs[o.id] = o.image_url; });
     }
 
-    container.innerHTML = commissions.map(c => {
+    const renderCard = (c) => {
       const fd = c.form_data || {};
       const isCompra = fd.tipo === 'compra_directa';
-      const clientName  = clientNames[c.client_id]  || c.form_data?.client_name || 'Usuario';
       const clientEmail = clientEmails[c.client_id] || c.form_data?.client_email || null;
       const title = isCompra ? `Compra: ${fd.obra_titulo || 'obra'}` : 'Solicitud de encargo';
       const preview = isCompra
         ? `Quiere comprar "${fd.obra_titulo}" por ${fd.precio}€`
-        : (fd.mensaje || fd.descripcion || Object.values(fd).filter(v=>typeof v==='string').slice(0,1)[0] || 'Sin detalles');
+        : (fd.mensaje || fd.descripcion || Object.values(fd).filter(v=>typeof v==='string').slice(0,1)[0] || 'Ver detalles');
       const time = timeAgo(c.created_at);
-
-      // thumbnail: imagen de la obra si es compra, emoji si es encargo
       const imgUrl = isCompra && fd.obra_id ? obraImgs[fd.obra_id] : null;
       const thumbHtml = imgUrl
         ? `<img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`
         : `<span style="font-size:1.4rem">${isCompra ? '🛒' : '🎨'}</span>`;
 
-      let statusBadge = '';
-      let actions = '';
-      if (c.status === 'accepted') {
-        statusBadge = '<span style="font-size:0.74rem;color:var(--green)">✓ Aceptado</span>';
-      } else if (c.status === 'declined') {
-        statusBadge = '<span style="font-size:0.74rem;color:var(--text-mute)">Rechazado</span>';
-      } else {
-        actions = `
-          <div class="request-actions">
-            <button class="btn-sm btn-accept" onclick="acceptRequest('${c.id}', this)">✓ Aceptar</button>
-            <button class="btn-sm btn-decline" onclick="declineRequest('${c.id}', this)">Rechazar</button>
+      // construir detalles desplegables a partir del form_data
+      const skipKeys = ['tipo', 'obra_id', 'obra_titulo', 'precio', 'client_name', 'client_email', 'mensaje'];
+      const detailRows = Object.entries(fd)
+        .filter(([k, v]) => !skipKeys.includes(k) && v && typeof v === 'string')
+        .map(([k, v]) => {
+          const isImg = v.startsWith('http') && (v.includes('supabase') || /\.(jpg|jpeg|png|webp|gif)/i.test(v));
+          return `<div class="req-detail-row">
+            <span class="req-detail-k">${k}</span>
+            ${isImg
+              ? `<a href="${v}" target="_blank"><img src="${v}" class="req-detail-img"></a>`
+              : `<span class="req-detail-v">${v}</span>`}
           </div>`;
+        }).join('');
+
+      const detailsHtml = (detailRows || isCompra)
+        ? `<div class="req-details">
+             ${isCompra ? `<div class="req-detail-row"><span class="req-detail-k">Obra</span><span class="req-detail-v">${fd.obra_titulo} · ${fd.precio}€</span></div>` : ''}
+             ${fd.mensaje ? `<div class="req-detail-row"><span class="req-detail-k">Mensaje</span><span class="req-detail-v">${fd.mensaje}</span></div>` : ''}
+             ${detailRows}
+             ${clientEmail ? `<div class="req-detail-row"><span class="req-detail-k">Contacto</span><a class="req-detail-v" href="mailto:${clientEmail}" style="color:#f0913a">${clientEmail}</a></div>` : ''}
+           </div>`
+        : `<div class="req-details"><div style="font-size:0.8rem;color:var(--text-mute)">Sin detalles adicionales.</div></div>`;
+
+      // acciones según estado
+      let actions = '';
+      if (c.status === 'pending') {
+        actions = `<div class="request-actions">
+          <button class="btn-sm btn-accept" onclick="event.stopPropagation();acceptRequest('${c.id}')">✓ Aceptar</button>
+          <button class="btn-sm btn-decline" onclick="event.stopPropagation();setReqStatus('${c.id}','declined')">Rechazar</button>
+        </div>`;
+      } else if (c.status === 'accepted') {
+        actions = `<div class="request-actions">
+          <span style="font-size:0.74rem;color:var(--green);align-self:center">✓ Aceptado</span>
+          <button class="btn-sm btn-accept" onclick="event.stopPropagation();setReqStatus('${c.id}','completed')">Marcar terminada</button>
+          <button class="btn-sm btn-decline" onclick="event.stopPropagation();setReqStatus('${c.id}','cancelled')">Cancelar</button>
+        </div>`;
+      } else {
+        const lbl = { completed:'✓ Terminada', cancelled:'Cancelada', declined:'Rechazada' };
+        actions = `<div style="font-size:0.74rem;color:var(--text-mute);margin-top:0.4rem">${lbl[c.status]||c.status}</div>`;
       }
 
       return `
       <div class="request-card" data-id="${c.id}">
-        <div class="request-thumb ${isCompra ? 'rt-buy' : 'rt-commission'}">${thumbHtml}</div>
-        <div class="request-body">
-          <div class="request-top">
-            <div class="request-title">${title}</div>
-            <div class="request-time">${time}</div>
+        <div class="request-head" onclick="toggleReqCard(this)">
+          <div class="request-thumb ${isCompra ? 'rt-buy' : 'rt-commission'}">${thumbHtml}</div>
+          <div class="request-body">
+            <div class="request-top">
+              <div class="request-title">${title}</div>
+              <div class="request-time">${time}</div>
+            </div>
+            <div class="request-preview">${preview}</div>
           </div>
-          <div class="request-client">
-            ${clientEmail 
-              ? `<a class="request-email" href="mailto:${clientEmail}">${clientEmail}</a>`
-              : 'Usuario desconocido'
-            }
-          </div>
-          <div class="request-preview">${preview}</div>
-          ${actions}
-          ${statusBadge}
+          <span class="req-chevron">▾</span>
         </div>
+        ${detailsHtml}
+        ${actions}
       </div>`;
-    }).join('');
+    };
+
+    let html = active.length
+      ? active.map(renderCard).join('')
+      : `<div style="font-size:0.82rem;color:var(--text-mute);padding:0.8rem 0">No tienes solicitudes activas.</div>`;
+
+    if (archived.length) {
+      html += `<button class="archive-toggle" onclick="toggleArchived(this)">${showArchivedRequests ? 'Ocultar' : 'Ver'} historial (${archived.length})</button>`;
+      if (showArchivedRequests) {
+        html += `<div class="archived-list">${archived.map(renderCard).join('')}</div>`;
+      }
+    }
+
+    container.innerHTML = html;
   }
 
-  async function acceptRequest(id, btn) {
-    btn.disabled = true;
-    const { error } = await supa.from('commissions').update({ status: 'accepted' }).eq('id', id).eq('artist_id', currentUser.id);
-    if (error) { btn.disabled = false; alert('No se pudo aceptar. Inténtalo de nuevo.'); return; }
-    const card = btn.closest('.request-card');
-    card.style.borderColor = 'rgba(63,174,106,0.4)';
-    card.querySelector('.request-actions').outerHTML = '<span style="font-size:0.78rem;color:var(--green)">✓ Aceptado — ponte en contacto con el cliente</span>';
+  function toggleReqCard(head) {
+    head.closest('.request-card').classList.toggle('expanded');
   }
 
-  async function declineRequest(id, btn) {
-    btn.disabled = true;
-    const { error } = await supa.from('commissions').update({ status: 'declined' }).eq('id', id).eq('artist_id', currentUser.id);
-    if (error) { btn.disabled = false; alert('No se pudo rechazar. Inténtalo de nuevo.'); return; }
-    const card = btn.closest('.request-card');
-    card.style.opacity = '0.4';
-    card.style.pointerEvents = 'none';
+  function toggleArchived(btn) {
+    showArchivedRequests = !showArchivedRequests;
+    buildRequests();
+  }
+
+  async function acceptRequest(id) {
+    await setReqStatus(id, 'accepted');
+  }
+
+  async function setReqStatus(id, status) {
+    const { error } = await supa.from('commissions').update({ status }).eq('id', id).eq('artist_id', currentUser.id);
+    if (error) { alert('No se pudo actualizar. Inténtalo de nuevo.'); return; }
+    buildRequests();
+    loadDashStats();
   }
 
   // ===== AVAILABILITY =====
@@ -4230,21 +4291,24 @@
   function dismissFirstVisit() {
     const fv = document.getElementById('first-visit');
     const donate = document.getElementById('donate');
+    if (fv.classList.contains('hidden')) return;
     fv.classList.add('hidden');
-    sessionStorage.setItem('fv-seen', '1');
+    localStorage.setItem('fv-seen', '1');
     // reveal donate after bubble fades out
     setTimeout(() => {
       donate.classList.remove('fv-hidden');
     }, 420);
   }
 
-  // on load: if bubble is showing, hide donate until dismissed
-  if (sessionStorage.getItem('fv-seen')) {
+  // on load: if bubble already seen (localStorage = persiste siempre), hide it
+  if (localStorage.getItem('fv-seen')) {
     document.getElementById('first-visit').classList.add('hidden');
     // bubble already seen — donate visible from start
   } else {
     // first visit — hide donate until bubble is closed
     document.getElementById('donate').classList.add('fv-hidden');
+    // auto-dismiss después de 10 segundos si no se interactúa
+    setTimeout(() => { dismissFirstVisit(); }, 10000);
   }
 
   // ===== DONATE =====
