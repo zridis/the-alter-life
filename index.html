@@ -819,6 +819,29 @@
     background: var(--surface-2);
   }
   .request-thumb.rt-buy { background: rgba(240,145,58,0.15); }
+  /* ===== PRIVACY PAGE ===== */
+  .privacy-section { margin-bottom:2rem; }
+  .privacy-section h2 { font-size:1rem;font-weight:600;margin-bottom:0.6rem;color:var(--text); }
+  .privacy-section p  { font-size:0.88rem;line-height:1.7;color:var(--text-dim);margin-bottom:0.6rem; }
+  .privacy-section ul { font-size:0.88rem;line-height:1.7;color:var(--text-dim);padding-left:1.2rem; }
+  .privacy-section li { margin-bottom:0.3rem; }
+  .privacy-section a  { color:#f0913a;text-decoration:none; }
+  .privacy-section a:hover { text-decoration:underline; }
+
+  /* ===== COOKIE BANNER ===== */
+  #cookie-banner {
+    position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%);
+    width: calc(100% - 2rem); max-width: 640px;
+    background: #1a1c26; border: 1px solid var(--border);
+    border-radius: 14px; padding: 1rem 1.2rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    z-index: 9999;
+  }
+  .cookie-inner { display:flex;align-items:center;gap:1rem;flex-wrap:wrap; }
+  .cookie-text  { flex:1;font-size:0.82rem;color:var(--text-dim);line-height:1.5;min-width:200px; }
+  .cookie-btns  { display:flex;gap:0.5rem;flex-shrink:0; }
+
+  /* ===== END PRIVACY ===== */
   .dash-section-title {
     font-size: 0.88rem; font-weight: 600;
     color: var(--text-dim); margin-bottom: 0.9rem;
@@ -1460,7 +1483,7 @@
         <div class="user-dd-footer">
           <span onclick="closeUserMenu();go('about')">Cómo funciona</span>
           <span>·</span>
-          <span onclick="closeUserMenu();go('about')">Privacidad</span>
+          <span onclick="closeUserMenu();go('privacy')">Privacidad</span>
           <span>·</span>
           <span onclick="closeUserMenu();go('about')">Contacto</span>
         </div>
@@ -1594,7 +1617,7 @@
   <div class="profile-top">
     <div class="profile-av-lg" id="profile-av">🎨</div>
     <div class="profile-info">
-      <div class="profile-name" id="profile-name">Seraphic Arts</div>
+      <div class="profile-name" id="profile-name"></div>
       <div class="avail-badge avail-open" id="profile-avail-badge" style="cursor:default">
         <span class="avail-dot"></span>
         <span id="profile-avail-label">Acepta encargos</span>
@@ -1668,32 +1691,7 @@
       <button class="btn-pill btn-ghost" onclick="openRating()">Valorar a este artista</button>
     </div>
     <div class="reviews-list" id="profile-reviews-list">
-      <div class="review">
-        <div class="review-top">
-          <div class="review-author">
-            <div class="review-av">D</div>
-            <div>
-              <div class="review-name">dragonlord_84</div>
-              <div class="review-stars">★★★★★</div>
-            </div>
-          </div>
-          <div class="review-date">Hace 1 semana</div>
-        </div>
-        <div class="review-text">Increíble trabajo con mi Liliana. Comunicación perfecta y el resultado superó lo que esperaba. Repetiré seguro.</div>
-      </div>
-      <div class="review">
-        <div class="review-top">
-          <div class="review-author">
-            <div class="review-av">M</div>
-            <div>
-              <div class="review-name">commander_fan</div>
-              <div class="review-stars">★★★★★</div>
-            </div>
-          </div>
-          <div class="review-date">Hace 3 semanas</div>
-        </div>
-        <div class="review-text">Muy profesional. Los tiempos que me dijo se cumplieron y el token quedó espectacular.</div>
-      </div>
+      <div style="font-size:0.82rem;color:var(--text-mute);padding:0.5rem 0">Aún no hay valoraciones.</div>
     </div>
   </div>
 </div>
@@ -1916,6 +1914,22 @@
       <button class="btn-pill btn-ghost" onclick="currentUser && openProfile(currentUser.id)">Ver perfil público →</button>
     </div>
 
+    <!-- stats reales -->
+    <div class="dash-stats" style="margin-bottom:1.4rem">
+      <div class="dash-stat">
+        <div class="dash-stat-n" id="stat-obras">—</div>
+        <div class="dash-stat-l">Obras subidas</div>
+      </div>
+      <div class="dash-stat">
+        <div class="dash-stat-n" id="stat-solicitudes">—</div>
+        <div class="dash-stat-l">Solicitudes nuevas</div>
+      </div>
+      <div class="dash-stat">
+        <div class="dash-stat-n" id="stat-ventas">—</div>
+        <div class="dash-stat-l">Ventas cerradas</div>
+      </div>
+    </div>
+
     <!-- toggle disponibilidad -->
     <div class="avail-toggle" onclick="toggleAvail()" style="margin-bottom:1.4rem">
       <div class="avail-toggle-txt">
@@ -2068,13 +2082,114 @@
   <div class="auth-wrap" style="text-align:center;padding-top:5rem">
     <div style="font-size:3rem;margin-bottom:1rem">✉️</div>
     <div class="ob-title">¡Solicitud enviada!</div>
-    <div class="ob-sub">Seraphic Arts recibirá tu mensaje y se pondrá en contacto contigo en los próximos días.</div>
+    <div class="ob-sub" id="form-artist-sub">El artista recibirá tu mensaje y se pondrá en contacto contigo.</div>
     <button class="btn-block primary" style="margin-top:1.5rem" onclick="go('home')">Volver al inicio</button>
     <button class="btn-block secondary" style="margin-top:0.5rem" onclick="go('profile')">Ver más obras del artista</button>
   </div>
 </div>
 
-<!-- ===== SOBRE ALTERFORGE / CÓMO FUNCIONA ===== -->
+<!-- ===== PRIVACY PAGE ===== -->
+<div class="page" id="page-privacy">
+  <div class="ob-wrap" style="max-width:680px">
+    <span class="nav-lnk" style="display:inline-block;margin-bottom:1.5rem;padding-left:0" onclick="history.back()">← Volver</span>
+    <h1 style="font-family:'Fraunces',serif;font-size:1.8rem;font-weight:600;margin-bottom:0.4rem">Política de Privacidad</h1>
+    <p style="font-size:0.8rem;color:var(--text-mute);margin-bottom:2rem">Última actualización: junio de 2026</p>
+
+    <div class="privacy-section">
+      <h2>1. Responsable del tratamiento</h2>
+      <p>Joan Vandellos Garcia<br>
+      Carrer de Bernat Bransi, 42, Barcelona 08032, España<br>
+      Contacto: <a href="mailto:hola@thealterlife.app">hola@thealterlife.app</a></p>
+    </div>
+
+    <div class="privacy-section">
+      <h2>2. Qué datos recogemos</h2>
+      <p>Al registrarte en The Alter Life recogemos:</p>
+      <ul>
+        <li><b>Email y contraseña</b> — para gestionar tu cuenta</li>
+        <li><b>Nombre de usuario</b> — para mostrar en tu perfil</li>
+        <li><b>País</b> — para personalizar tu experiencia</li>
+        <li><b>Usuario de Discord</b> — opcional, para que los artistas puedan contactarte</li>
+        <li><b>Imágenes que subes</b> — obras de arte y referencias de encargos</li>
+        <li><b>Solicitudes de encargo y compra</b> — para conectar artistas y compradores</li>
+      </ul>
+    </div>
+
+    <div class="privacy-section">
+      <h2>3. Para qué usamos tus datos</h2>
+      <ul>
+        <li>Gestionar tu cuenta y permitirte acceder al servicio</li>
+        <li>Enviar emails de confirmación y notificaciones de solicitudes</li>
+        <li>Mostrar tu perfil de artista a otros usuarios (si activas el modo artista)</li>
+        <li>Mejorar el funcionamiento de la plataforma</li>
+      </ul>
+      <p>No vendemos ni cedemos tus datos a terceros con fines comerciales.</p>
+    </div>
+
+    <div class="privacy-section">
+      <h2>4. Base legal</h2>
+      <p>El tratamiento de tus datos se basa en la ejecución del contrato (los Términos de Uso que aceptas al registrarte) y, en algunos casos, en tu consentimiento explícito.</p>
+    </div>
+
+    <div class="privacy-section">
+      <h2>5. Proveedores de servicio</h2>
+      <p>Utilizamos los siguientes servicios para operar la plataforma:</p>
+      <ul>
+        <li><b>Supabase</b> — base de datos y autenticación (servidores en la UE)</li>
+        <li><b>Resend</b> — envío de emails transaccionales</li>
+        <li><b>Vercel</b> — alojamiento web</li>
+      </ul>
+      <p>Todos actúan como encargados del tratamiento bajo acuerdos de protección de datos conformes al RGPD.</p>
+    </div>
+
+    <div class="privacy-section">
+      <h2>6. Cookies</h2>
+      <p>The Alter Life solo usa cookies técnicas estrictamente necesarias para el funcionamiento del servicio:</p>
+      <ul>
+        <li><b>Cookie de sesión</b> — para mantenerte logueado</li>
+        <li><b>Preferencias de cookies</b> — para recordar si aceptaste este aviso</li>
+      </ul>
+      <p>No usamos cookies de publicidad, seguimiento ni analítica de terceros.</p>
+    </div>
+
+    <div class="privacy-section">
+      <h2>7. Cuánto tiempo guardamos tus datos</h2>
+      <p>Guardamos tus datos mientras tu cuenta esté activa. Puedes eliminar tu cuenta en cualquier momento desde Ajustes → Zona peligrosa, lo que borrará todos tus datos de forma permanente.</p>
+    </div>
+
+    <div class="privacy-section">
+      <h2>8. Tus derechos</h2>
+      <p>Conforme al RGPD tienes derecho a:</p>
+      <ul>
+        <li>Acceder a tus datos personales</li>
+        <li>Rectificar datos incorrectos</li>
+        <li>Suprimir tus datos ("derecho al olvido")</li>
+        <li>Portabilidad de tus datos</li>
+        <li>Oponerte al tratamiento</li>
+      </ul>
+      <p>Para ejercer cualquiera de estos derechos, escríbenos a <a href="mailto:hola@thealterlife.app">hola@thealterlife.app</a>. También puedes reclamar ante la <a href="https://www.aepd.es" target="_blank">Agencia Española de Protección de Datos (AEPD)</a>.</p>
+    </div>
+
+    <div class="privacy-section">
+      <h2>9. Cambios en esta política</h2>
+      <p>Si realizamos cambios significativos te lo comunicaremos por email. La versión actualizada siempre estará disponible en esta página.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== COOKIE BANNER ===== -->
+<div id="cookie-banner" style="display:none">
+  <div class="cookie-inner">
+    <div class="cookie-text">
+      Usamos cookies técnicas necesarias para el funcionamiento del servicio. No hay cookies de publicidad ni seguimiento.
+      <a onclick="go('privacy')" style="color:#f0913a;cursor:pointer;margin-left:0.3rem">Saber más</a>
+    </div>
+    <div class="cookie-btns">
+      <button class="btn-sm btn-accept" onclick="acceptCookies()">Aceptar</button>
+      <button class="btn-sm" style="background:transparent;border:1px solid var(--border);color:var(--text-mute)" onclick="acceptCookies()">Solo necesarias</button>
+    </div>
+  </div>
+</div>
 <div class="page" id="page-about">
   <div class="about-hero">
     <div class="about-hero-inner">
@@ -2223,8 +2338,9 @@
       <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
     </div>
 
-    <div style="margin-top:1.8rem;display:flex;gap:0.6rem">
-      <button class="btn-block primary" style="max-width:160px">Guardar cambios</button>
+    <div style="margin-top:1.8rem;display:flex;gap:0.6rem;align-items:center">
+      <button class="btn-block primary" style="max-width:160px" id="settings-save-btn" onclick="saveSettings()">Guardar cambios</button>
+      <span id="settings-save-msg" style="font-size:0.8rem;color:var(--green);display:none">✓ Guardado</span>
     </div>
 
     <div class="set-danger">
@@ -2242,7 +2358,7 @@
         <div class="ob-title" style="margin-bottom:0.2rem">Obras guardadas</div>
         <div style="font-size:0.86rem;color:var(--text-mute)">Tus alters favoritos, todo en un sitio.</div>
       </div>
-      <button class="btn-pill btn-ghost" onclick="toggleSavedEmpty()" style="font-size:0.78rem">Demo: vaciar/llenar</button>
+      
     </div>
 
     <!-- empty state -->
@@ -2279,7 +2395,7 @@
     <button class="modal-close" onclick="closeRating()">✕</button>
     <div class="rating-box-inner" id="rating-step-1">
       <div class="rating-av">🎨</div>
-      <div class="rating-title">Valora a Seraphic Arts</div>
+      <div class="rating-title" id="rating-artist-name">Valora al artista</div>
       <div class="rating-sub">Solo puedes valorar artistas con los que hayas completado un encargo.</div>
       <div class="star-input" id="star-input">
         <span class="star" data-v="1" onclick="setStars(1)">★</span>
@@ -2323,7 +2439,7 @@
       <div class="modal-price" id="m-price"></div>
       <div class="modal-actions">
         <button class="btn-block primary" id="m-buy" onclick="buyArtwork()" style="display:none">Quiero comprar esta pieza</button>
-        <button class="btn-block primary" id="m-cta" onclick="closeModal();go('form')">Solicitar encargo similar</button>
+        <button class="btn-block primary" id="m-cta" onclick="closeModal();openCommissionForm()">Solicitar encargo similar</button>
         <button class="btn-block secondary" onclick="closeModal();openProfile(currentModalArtistId)">Ver más obras de este artista</button>
       </div>
     </div>
@@ -2359,19 +2475,19 @@
 <script>
   // ===== DATA =====
   const pins = [
-    { title:'Liliana, Dusk Rose',  game:'Magic · Full art',  artist:'Seraphic Arts', state:'sale',  price:'90€',  art:'a1' },
+    { title:'Liliana, Dusk Rose',  game:'Magic · Full art',  artist:'Artista', state:'sale',  price:'90€',  art:'a1' },
     { title:'Charizard Holo',      game:'Pokémon · Alter',   artist:'Ember & Ink',   state:'sold',  price:'45€',  art:'a3' },
     { title:'Jace Mirror Mage',    game:'Magic · Token',     artist:'VoidBrush',     state:'folio', price:null,   art:'a2' },
     { title:'Elsa of Arendelle',   game:'Lorcana · Full art',artist:'CrystalPaint',  state:'sale',  price:'60€',  art:'a6' },
     { title:'Forest (alter)',      game:'Magic · Basic land',artist:'Greenleaf',     state:'sold',  price:'35€',  art:'a4' },
     { title:'Monkey D. Luffy',     game:'One Piece · Alter', artist:'NightForge',    state:'sale',  price:'55€',  art:'a7' },
-    { title:'Spirit Token 1/1',    game:'Magic · Token',     artist:'Seraphic Arts', state:'folio', price:null,   art:'a5' },
+    { title:'Spirit Token 1/1',    game:'Magic · Token',     artist:'Artista', state:'folio', price:null,   art:'a5' },
     { title:'Pikachu VMAX',        game:'Pokémon · Alter',   artist:'CrystalPaint',  state:'sale',  price:'70€',  art:'a9' },
     { title:'Urza Lord Protector', game:'Magic · Alter',     artist:'VoidBrush',     state:'sold',  price:'80€',  art:'a8' },
     { title:'Island (alter)',      game:'Magic · Basic land',artist:'Greenleaf',     state:'sale',  price:'30€',  art:'a2' },
     { title:'Mirri Duelist',       game:'Magic · Full art',  artist:'Ember & Ink',   state:'folio', price:null,   art:'a10'},
     { title:'Zombie Token 2/2',    game:'Magic · Token',     artist:'NightForge',    state:'sale',  price:'25€',  art:'a6' },
-    { title:'Sol Ring',            game:'Magic · Alter',     artist:'Seraphic Arts', state:'sold',  price:'65€',  art:'a3' },
+    { title:'Sol Ring',            game:'Magic · Alter',     artist:'Artista', state:'sold',  price:'65€',  art:'a3' },
     { title:'Mewtwo GX',           game:'Pokémon · Alter',   artist:'VoidBrush',     state:'sale',  price:'75€',  art:'a1' },
     { title:'Treasure Token',      game:'Magic · Token',     artist:'CrystalPaint',  state:'folio', price:null,   art:'a5' },
   ];
@@ -2442,19 +2558,19 @@
 
   // Fallback demo wall for when DB is empty
   const demoPins = [
-    { title:'Liliana, Dusk Rose',  game:'Magic · Full art',  artist:'Seraphic Arts', status:'for_sale', price:90,  art:'a1' },
+    { title:'Liliana, Dusk Rose',  game:'Magic · Full art',  artist:'Artista', status:'for_sale', price:90,  art:'a1' },
     { title:'Charizard Holo',      game:'Pokémon · Alter',   artist:'Ember & Ink',   status:'sold',     price:45,  art:'a3' },
     { title:'Jace Mirror Mage',    game:'Magic · Token',     artist:'VoidBrush',     status:'portfolio',price:null,art:'a2' },
     { title:'Elsa of Arendelle',   game:'Lorcana · Full art',artist:'CrystalPaint',  status:'for_sale', price:60,  art:'a6' },
     { title:'Forest (alter)',      game:'Magic · Basic land',artist:'Greenleaf',     status:'sold',     price:35,  art:'a4' },
     { title:'Monkey D. Luffy',     game:'One Piece · Alter', artist:'NightForge',    status:'for_sale', price:55,  art:'a7' },
-    { title:'Spirit Token 1/1',    game:'Magic · Token',     artist:'Seraphic Arts', status:'portfolio',price:null,art:'a5' },
+    { title:'Spirit Token 1/1',    game:'Magic · Token',     artist:'Artista', status:'portfolio',price:null,art:'a5' },
     { title:'Pikachu VMAX',        game:'Pokémon · Alter',   artist:'CrystalPaint',  status:'for_sale', price:70,  art:'a9' },
     { title:'Urza Lord Protector', game:'Magic · Alter',     artist:'VoidBrush',     status:'sold',     price:80,  art:'a8' },
     { title:'Island (alter)',      game:'Magic · Basic land',artist:'Greenleaf',     status:'for_sale', price:30,  art:'a2' },
     { title:'Mirri Duelist',       game:'Magic · Full art',  artist:'Ember & Ink',   status:'portfolio',price:null,art:'a10'},
     { title:'Zombie Token 2/2',    game:'Magic · Token',     artist:'NightForge',    status:'for_sale', price:25,  art:'a6' },
-    { title:'Sol Ring',            game:'Magic · Alter',     artist:'Seraphic Arts', status:'sold',     price:65,  art:'a3' },
+    { title:'Sol Ring',            game:'Magic · Alter',     artist:'Artista', status:'sold',     price:65,  art:'a3' },
     { title:'Mewtwo GX',           game:'Pokémon · Alter',   artist:'VoidBrush',     status:'for_sale', price:75,  art:'a1' },
     { title:'Treasure Token',      game:'Magic · Token',     artist:'CrystalPaint',  status:'portfolio',price:null,art:'a5' },
   ];
@@ -2643,7 +2759,7 @@
 
     // cargar datos reales al entrar en cada página
     if (page === 'saved') loadSaved();
-    if (page === 'dash')  { switchDashTab('solicitudes'); }
+    if (page === 'dash')  { loadDashStats(); switchDashTab('solicitudes'); }
 
     window.scrollTo(0, 0);
   }
@@ -2992,6 +3108,9 @@
     document.getElementById('profile-name').textContent = artist.display_name || '—';
     document.getElementById('profile-bio').textContent  = artist.bio || '';
     document.getElementById('profile-av').textContent   = (artist.display_name || '?')[0].toUpperCase();
+    // actualizar título del modal de valoración
+    const ratingTitle = document.getElementById('rating-artist-name');
+    if (ratingTitle) ratingTitle.textContent = `Valora a ${artist.display_name || 'este artista'}`;
 
     // availability
     const badge = document.getElementById('profile-avail-badge');
@@ -3474,6 +3593,21 @@
     document.getElementById('set-discord-field').style.display = discordOn ? '' : 'none';
   }
 
+  // ===== COOKIES =====
+  function acceptCookies() {
+    localStorage.setItem('tal_cookies', '1');
+    document.getElementById('cookie-banner').style.display = 'none';
+  }
+
+  function checkCookieBanner() {
+    if (!localStorage.getItem('tal_cookies')) {
+      document.getElementById('cookie-banner').style.display = 'block';
+    }
+  }
+
+  // mostrar banner al cargar
+  checkCookieBanner();
+
   // ===== FORM BUILDER =====
   function buildFormFields() {
     document.getElementById('fb-fields').innerHTML = formFields.map((f,i) => `
@@ -3532,13 +3666,30 @@
   }
 
   function openCommissionForm() {
-    // pasar el nombre del artista actual al formulario
-    const name = document.getElementById('profile-name')?.textContent || 'Artista';
-    const av   = document.getElementById('profile-av')?.textContent || '🎨';
+    let name, artistId;
+
+    // priorizar artista de la obra del modal
+    if (currentModalArtwork?.artist_id) {
+      name     = currentModalArtwork.artists?.display_name
+                 || document.getElementById('m-artist')?.textContent?.trim()
+                 || 'Artista';
+      artistId = currentModalArtwork.artist_id;
+    } else if (currentProfileId) {
+      name     = document.getElementById('profile-name')?.textContent?.trim() || 'Artista';
+      artistId = currentProfileId;
+    } else {
+      name     = 'Artista';
+      artistId = null;
+    }
+
+    currentProfileId = artistId;
+
     const fName = document.getElementById('form-artist-name');
     const fAv   = document.getElementById('form-artist-av');
     if (fName) fName.textContent = name;
-    if (fAv)   fAv.textContent = av;
+    if (fAv)   fAv.textContent = name[0]?.toUpperCase() || '🎨';
+    const fSub = document.getElementById('form-artist-sub');
+    if (fSub) fSub.textContent = `${name} recibirá tu mensaje y se pondrá en contacto contigo.`;
     go('form');
   }
 
@@ -4004,6 +4155,62 @@
       setTimeout(() => splash.classList.add('hidden'), 900);
     }, 3000);
   })();
+
+  async function saveSettings() {
+    if (!currentUser) return;
+    const btn = document.getElementById('settings-save-btn');
+    const msg = document.getElementById('settings-save-msg');
+    if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+
+    const name    = document.getElementById('set-name')?.value?.trim();
+    const country = document.getElementById('set-country')?.value;
+    const discord = document.querySelector('#set-discord-field .inp')?.value?.trim();
+
+    const { error } = await supa.from('profiles').update({
+      username: name || null,
+      country:  country || null,
+      discord:  discord || null,
+    }).eq('id', currentUser.id);
+
+    if (btn) { btn.disabled = false; btn.textContent = 'Guardar cambios'; }
+
+    if (!error) {
+      if (msg) { msg.style.display = 'inline'; setTimeout(() => { msg.style.display = 'none'; }, 2500); }
+      // actualizar nombre en topbar
+      if (name) showLoggedIn(name);
+    }
+  }
+
+  async function loadDashStats() {
+    if (!currentUser) return;
+
+    // obras subidas
+    const { count: obras } = await supa
+      .from('artworks')
+      .select('*', { count: 'exact', head: true })
+      .eq('artist_id', currentUser.id);
+
+    // solicitudes nuevas (pending)
+    const { count: solicitudes } = await supa
+      .from('commissions')
+      .select('*', { count: 'exact', head: true })
+      .eq('artist_id', currentUser.id)
+      .eq('status', 'pending');
+
+    // ventas cerradas (accepted)
+    const { count: ventas } = await supa
+      .from('commissions')
+      .select('*', { count: 'exact', head: true })
+      .eq('artist_id', currentUser.id)
+      .eq('status', 'accepted');
+
+    const el1 = document.getElementById('stat-obras');
+    const el2 = document.getElementById('stat-solicitudes');
+    const el3 = document.getElementById('stat-ventas');
+    if (el1) el1.textContent = obras ?? 0;
+    if (el2) el2.textContent = solicitudes ?? 0;
+    if (el3) el3.textContent = ventas ?? 0;
+  }
 
   function switchDashTab(tab) {
     const tabs   = ['solicitudes', 'obras', 'subir', 'form'];
