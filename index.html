@@ -494,6 +494,20 @@
     font-size: 2.2rem; flex-shrink: 0;
   }
   .profile-info { flex: 1; min-width: 200px; }
+  .verified-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    font-size: 0.7rem; font-weight: 700;
+    vertical-align: middle; margin-left: 0.2rem;
+  }
+  .verified-badge-sm {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    font-size: 0.55rem; font-weight: 700;
+    vertical-align: middle; margin-left: 0.15rem;
+  }
   .profile-name {
     font-family: 'Fraunces', serif;
     font-size: 1.65rem; font-weight: 600; margin-bottom: 0.3rem;
@@ -2317,6 +2331,19 @@
     <div class="ob-sub">Gestiona tu cuenta y tus preferencias.</div>
 
     <div class="form-section-label">Tu cuenta</div>
+
+    <div class="field">
+      <label class="field-label">Foto de perfil</label>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <div id="set-avatar-preview" style="width:64px;height:64px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.5rem;background-size:cover;background-position:center;flex-shrink:0">?</div>
+        <div>
+          <button class="btn-pill btn-ghost" onclick="document.getElementById('set-avatar-file').click()">Subir foto</button>
+          <input type="file" id="set-avatar-file" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
+          <div id="set-avatar-status" style="font-size:0.76rem;color:var(--text-mute);margin-top:0.4rem"></div>
+        </div>
+      </div>
+    </div>
+
     <div class="field">
       <label class="field-label">Nombre</label>
       <input class="inp" type="text" id="set-name" value="Tu nombre">
@@ -2493,11 +2520,8 @@
     <span id="donate-label">Apóyanos</span>
   </button>
   <div class="donate-options">
-    <a class="donate-opt" href="#" target="_blank">
-      <span class="donate-ic ic-pp">PP</span> Donar con PayPal
-    </a>
-    <a class="donate-opt" href="#" target="_blank">
-      <span class="donate-ic ic-bmc">☕</span> Buy Me a Coffee
+    <a class="donate-opt" href="https://ko-fi.com/thealterlife" target="_blank">
+      <span class="donate-ic" style="background:#FF5E5B;color:#fff;font-size:1rem">☕</span> Apoyar en Ko-fi
     </a>
   </div>
 </div>
@@ -2560,7 +2584,7 @@
 
     const { data: artworks, error } = await supa
       .from('artworks')
-      .select(`*, artists(display_name, id)`)
+      .select(`*, artists(display_name, id, verified)`)
       .order('score', { ascending: false })
       .limit(40);
 
@@ -2583,7 +2607,7 @@
             <button class="pin-save" onclick="event.stopPropagation();saveArtwork('${p.id}',this)">Guardar</button>
             <div class="pin-ov-artist">
               <div class="pin-ov-dot">🎨</div>
-              <div class="pin-ov-name">${p.artists?.display_name || 'Artista'}</div>
+              <div class="pin-ov-name">${p.artists?.display_name || 'Artista'}${p.artists?.verified ? '<span class="verified-badge-sm">✓</span>' : ''}</div>
             </div>
           </div>
         </div>
@@ -2944,6 +2968,17 @@
       const dash = document.getElementById('udd-dash');
       if (dash) dash.style.display = 'flex';
     }
+
+    // avatar personalizado
+    if (profile?.avatar_url) {
+      updateTopbarAvatar(profile.avatar_url);
+      const prev = document.getElementById('set-avatar-preview');
+      if (prev) { prev.style.backgroundImage = `url(${profile.avatar_url})`; prev.textContent = ''; }
+    } else {
+      const prev = document.getElementById('set-avatar-preview');
+      if (prev) prev.textContent = (name[0] || '?').toUpperCase();
+    }
+
     if (reloadMuro) loadMuro();
   }
 
@@ -3146,13 +3181,38 @@
 
     if (!artist) return;
 
+    // load profile data (avatar, etc.)
+    const { data: prof } = await supa
+      .from('profiles')
+      .select('avatar_url, username')
+      .eq('id', artistId)
+      .single();
+
+    const displayName = artist.display_name || prof?.username || '—';
+
     // basic info
-    document.getElementById('profile-name').textContent = artist.display_name || '—';
+    const nameEl = document.getElementById('profile-name');
+    nameEl.innerHTML = displayName + (artist.verified
+      ? ' <span class="verified-badge" title="Artista verificado">✓</span>'
+      : '');
+
     document.getElementById('profile-bio').textContent  = artist.bio || '';
-    document.getElementById('profile-av').textContent   = (artist.display_name || '?')[0].toUpperCase();
+
+    // avatar: foto si existe, inicial si no
+    const avEl = document.getElementById('profile-av');
+    if (prof?.avatar_url) {
+      avEl.style.backgroundImage = `url(${prof.avatar_url})`;
+      avEl.style.backgroundSize = 'cover';
+      avEl.style.backgroundPosition = 'center';
+      avEl.textContent = '';
+    } else {
+      avEl.style.backgroundImage = '';
+      avEl.textContent = displayName[0].toUpperCase();
+    }
+
     // actualizar título del modal de valoración
     const ratingTitle = document.getElementById('rating-artist-name');
-    if (ratingTitle) ratingTitle.textContent = `Valora a ${artist.display_name || 'este artista'}`;
+    if (ratingTitle) ratingTitle.textContent = `Valora a ${displayName}`;
 
     // availability
     const badge = document.getElementById('profile-avail-badge');
@@ -4238,6 +4298,43 @@
       setTimeout(() => splash.classList.add('hidden'), 900);
     }, 3000);
   })();
+
+  async function uploadAvatar(input) {
+    if (!input.files || !input.files[0] || !currentUser) return;
+    const file = input.files[0];
+    const status = document.getElementById('set-avatar-status');
+    if (status) status.textContent = 'Subiendo...';
+
+    // comprimir y subir
+    const path = `avatars/${currentUser.id}_${Date.now()}.jpg`;
+    const { error: upErr } = await supa.storage.from('artworks').upload(path, file, { upsert: true });
+    if (upErr) { if (status) status.textContent = 'Error al subir. Inténtalo de nuevo.'; return; }
+
+    const { data: urlData } = supa.storage.from('artworks').getPublicUrl(path);
+    const avatarUrl = urlData.publicUrl;
+
+    // guardar en profiles
+    const { error } = await supa.from('profiles').update({ avatar_url: avatarUrl }).eq('id', currentUser.id);
+    if (error) { if (status) status.textContent = 'Error al guardar.'; return; }
+
+    // actualizar preview + topbar
+    const prev = document.getElementById('set-avatar-preview');
+    if (prev) { prev.style.backgroundImage = `url(${avatarUrl})`; prev.textContent = ''; }
+    updateTopbarAvatar(avatarUrl);
+    if (status) status.textContent = '✓ Foto actualizada';
+  }
+
+  function updateTopbarAvatar(url) {
+    ['user-av', 'user-av-lg'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && url) {
+        el.style.backgroundImage = `url(${url})`;
+        el.style.backgroundSize = 'cover';
+        el.style.backgroundPosition = 'center';
+        el.textContent = '';
+      }
+    });
+  }
 
   async function saveSettings() {
     if (!currentUser) return;
