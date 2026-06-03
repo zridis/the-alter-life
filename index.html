@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Alter Life</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -15,25 +15,28 @@
 </script>
 <style>
   :root {
-    --bg: #08090d;
-    --bg-soft: #0e1018;
-    --surface: #12141e;
-    --surface-2: #181b27;
-    --border: #1e2130;
-    --border-soft: #181a28;
-    --text: #e9e9ec;
-    --text-dim: #9a9ba8;
-    --text-mute: #5a5c6a;
+    --bg: #0a0a0f;
+    --bg-soft: #101019;
+    --surface: #15151f;
+    --surface-2: #1d1d2b;
+    --border: #28283a;
+    --border-soft: #1e1e2c;
+    --text: #ececf1;
+    --text-dim: #9c9cad;
+    --text-mute: #62627a;
     --white: #ffffff;
     --green: #3fae6a;
     --red: #e05555;
-    --amber: #d6a43a;
+    --amber: #e0a93a;
+    --accent: #9b5cff;
+    --accent-soft: rgba(155,92,255,0.15);
+    --accent-dim: #7d3ce8;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Geist', sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
@@ -64,7 +67,7 @@
     border-radius: 999px;
     color: var(--text);
     padding: 0.55rem 1rem 0.55rem 2.4rem;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Geist', sans-serif;
     font-size: 0.86rem; outline: none;
     transition: border-color 0.15s;
   }
@@ -180,9 +183,9 @@
   }
   .gl-all      { background: linear-gradient(135deg,#2a3245,#141720); color: var(--text-dim); }
   .gl-magic    { background: #1a2a4a; color: #6a9fd8; }
-  .gl-pokemon  { background: #3a2a10; color: #e8b84b; }
+  .gl-pokemon  { background: #3a2a10; color: var(--accent); }
   .gl-lorcana  { background: #2a1a3a; color: #b06ad8; }
-  .gl-onepiece { background: #3a1a10; color: #e86a3a; }
+  .gl-onepiece { background: #3a1a10; color: var(--accent-dim); }
   .gl-yugioh   { background: #1a3a2a; color: #4ab87a; }
 
   .game-dropdown-menu {
@@ -463,7 +466,7 @@
     font-size: 1.5rem; font-weight: 600;
     margin-bottom: 1.2rem;
   }
-  .modal-price span { font-size: 0.8rem; font-weight: 400; color: var(--text-mute); font-family: 'Inter', sans-serif; }
+  .modal-price span { font-size: 0.8rem; font-weight: 400; color: var(--text-mute); font-family: 'Geist', sans-serif; }
   .modal-actions { margin-top: auto; display: flex; flex-direction: column; gap: 0.5rem; }
   .btn-block {
     width: 100%; font-size: 0.86rem; font-weight: 500;
@@ -567,13 +570,13 @@
 
   .field { margin-bottom: 0.9rem; }
   .field-label { display: block; font-size: 0.83rem; color: var(--text-dim); margin-bottom: 0.35rem; }
-  .field-label .req { color: #e07755; }
+  .field-label .req { color: var(--accent); }
   .inp, .sel, .txt {
     width: 100%;
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 10px; color: var(--text);
     padding: 0.7rem 0.85rem;
-    font-family: 'Inter', sans-serif; font-size: 0.88rem;
+    font-family: 'Geist', sans-serif; font-size: 0.88rem;
     outline: none; transition: border-color 0.15s;
   }
   .inp:focus, .sel:focus, .txt:focus { border-color: #2e3244; }
@@ -751,7 +754,7 @@
   .dash-tab-badge {
     position: absolute; top: 4px; right: 4px;
     min-width: 16px; height: 16px; padding: 0 4px;
-    background: #e0633a; color: #fff;
+    background: var(--accent-dim); color: #fff;
     font-size: 0.62rem; font-weight: 700;
     border-radius: 999px;
     display: flex; align-items: center; justify-content: center;
@@ -825,7 +828,7 @@
   .privacy-section p  { font-size:0.88rem;line-height:1.7;color:var(--text-dim);margin-bottom:0.6rem; }
   .privacy-section ul { font-size:0.88rem;line-height:1.7;color:var(--text-dim);padding-left:1.2rem; }
   .privacy-section li { margin-bottom:0.3rem; }
-  .privacy-section a  { color:#f0913a;text-decoration:none; }
+  .privacy-section a  { color:var(--accent);text-decoration:none; }
   .privacy-section a:hover { text-decoration:underline; }
 
   /* ===== COOKIE BANNER ===== */
@@ -898,13 +901,13 @@
     font-size: 0.68rem; font-weight: 600; text-transform: uppercase;
     letter-spacing: 0.03em; padding: 0.16rem 0.5rem; border-radius: 999px;
   }
-  .rs-pending   { background: rgba(240,145,58,0.16); color: #f0913a; }
+  .rs-pending   { background: rgba(240,145,58,0.16); color: var(--accent); }
   .rs-accepted  { background: rgba(63,174,106,0.16); color: var(--green); }
   .rs-completed { background: rgba(110,130,255,0.16); color: #8b9bff; }
   .rs-cancelled { background: var(--surface-2); color: var(--text-mute); }
   .request-title { font-size: 0.92rem; font-weight: 600; margin-bottom: 0.15rem; }
   .request-time { font-size: 0.74rem; color: var(--text-mute); white-space: nowrap; }
-  .request-email { font-size: 0.78rem; color: #f0913a; text-decoration: none; }
+  .request-email { font-size: 0.78rem; color: var(--accent); text-decoration: none; }
   .request-email:hover { text-decoration: underline; }
   .request-client { font-size: 0.78rem; color: var(--text-mute); }
   .request-preview { font-size: 0.83rem; color: var(--text-dim); line-height: 1.5; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
@@ -961,7 +964,7 @@
     white-space: nowrap;
   }
   .fb-field-label { font-size: 0.85rem; flex: 1; }
-  .fb-field-req { font-size: 0.68rem; color: #e07755; }
+  .fb-field-req { font-size: 0.68rem; color: var(--accent); }
   .fb-field-del {
     color: var(--text-mute); cursor: pointer; font-size: 0.8rem;
     padding: 0.2rem 0.4rem; border-radius: 5px;
@@ -1166,7 +1169,7 @@
     display: flex; align-items: center; gap: 0.55rem;
     font-size: 0.92rem; font-weight: 600;
     color: #fff;
-    background: linear-gradient(135deg, #f0913a 0%, #e0633a 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
     border: none; padding: 0.82rem 1.35rem;
     border-radius: 999px; cursor: pointer;
     box-shadow: 0 6px 24px rgba(224,99,58,0.45);
@@ -1280,7 +1283,7 @@
   .fv-btn {
     font-size: 0.8rem; font-weight: 600;
     color: #fff;
-    background: linear-gradient(135deg, #f0913a 0%, #e0633a 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
     border: none; border-radius: 999px;
     padding: 0.5rem 1.1rem; cursor: pointer;
     transition: opacity 0.15s;
@@ -2219,7 +2222,7 @@
   <div class="cookie-inner">
     <div class="cookie-text">
       Usamos cookies técnicas necesarias para el funcionamiento del servicio. No hay cookies de publicidad ni seguimiento.
-      <a onclick="go('privacy')" style="color:#f0913a;cursor:pointer;margin-left:0.3rem">Saber más</a>
+      <a onclick="go('privacy')" style="color:var(--accent);cursor:pointer;margin-left:0.3rem">Saber más</a>
     </div>
     <div class="cookie-btns">
       <button class="btn-sm btn-accept" onclick="acceptCookies()">Aceptar</button>
@@ -3866,7 +3869,7 @@
              ${isCompra ? `<div class="req-detail-row"><span class="req-detail-k">Obra</span><span class="req-detail-v">${fd.obra_titulo} · ${fd.precio}€</span></div>` : ''}
              ${fd.mensaje ? `<div class="req-detail-row"><span class="req-detail-k">Mensaje</span><span class="req-detail-v">${fd.mensaje}</span></div>` : ''}
              ${detailRows}
-             ${clientEmail ? `<div class="req-detail-row"><span class="req-detail-k">Contacto</span><a class="req-detail-v" href="mailto:${clientEmail}" style="color:#f0913a">${clientEmail}</a></div>` : ''}
+             ${clientEmail ? `<div class="req-detail-row"><span class="req-detail-k">Contacto</span><a class="req-detail-v" href="mailto:${clientEmail}" style="color:var(--accent)">${clientEmail}</a></div>` : ''}
            </div>`
         : `<div class="req-details"><div style="font-size:0.8rem;color:var(--text-mute)">Sin detalles adicionales.</div></div>`;
 
