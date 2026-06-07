@@ -2582,29 +2582,37 @@
         <div class="pin-card" style="background:var(--surface-2);border-radius:14px;animation:pulse 1.5s ease-in-out infinite"></div>
       </div>`).join('');
 
-    let { data: artworks, error } = await supa
-      .from('artworks')
-      .select(`*, artists(display_name, id, verified)`)
-      .order('score', { ascending: false })
-      .limit(40);
+    // timeout de seguridad — si tarda más de 8s, mostrar demos
+    const timeout = setTimeout(() => {
+      if (wall.querySelector('.pin-card[style*="pulse"]')) {
+        buildWallDemo();
+      }
+    }, 8000);
 
-    // si falla por la columna verified (aún no migrada), reintenta sin ella
-    if (error) {
-      const retry = await supa
+    try {
+      let { data: artworks, error } = await supa
         .from('artworks')
-        .select(`*, artists(display_name, id)`)
+        .select(`*, artists(display_name, id, verified)`)
         .order('score', { ascending: false })
         .limit(40);
-      artworks = retry.data;
-      error = retry.error;
-    }
 
-    if (error || !artworks || artworks.length === 0) {
-      // Fallback to demo pins if DB is empty
-      wall.innerHTML = '';
-      buildWallDemo();
-      return;
-    }
+      // si falla por la columna verified (aún no migrada), reintenta sin ella
+      if (error) {
+        const retry = await supa
+          .from('artworks')
+          .select(`*, artists(display_name, id)`)
+          .order('score', { ascending: false })
+          .limit(40);
+        artworks = retry.data;
+        error = retry.error;
+      }
+
+      clearTimeout(timeout);
+
+      if (error || !artworks || artworks.length === 0) {
+        buildWallDemo();
+        return;
+      }
 
     allArtworks = artworks;
     wall.innerHTML = artworks.map((p, i) => `
@@ -2629,6 +2637,11 @@
         </div>
       </div>
     `).join('');
+    } catch(e) {
+      clearTimeout(timeout);
+      console.error('loadMuro error:', e);
+      buildWallDemo();
+    }
   }
 
   // Fallback demo wall for when DB is empty
@@ -3088,6 +3101,7 @@
         return;
       }
       // éxito → el listener SIGNED_IN navega solo
+      // no hacer nada más aquí — hydrateUser se encarga
     }
   }
 
