@@ -1505,7 +1505,7 @@
     </div>
   <div class="search">
     <svg class="search-ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
-    <input type="text" placeholder="Buscar cartas, artistas, estilos...">
+    <input type="text" id="search-input" placeholder="Buscar cartas, artistas, estilos..." oninput="searchMuro(this.value)" onfocus="go('home')">
   </div>
   <div class="topbar-r">
     <span class="nav-lnk active" id="nl-home" onclick="go('home')" style="display:none">Explorar</span>
@@ -2582,11 +2582,22 @@
         <div class="pin-card" style="background:var(--surface-2);border-radius:14px;animation:pulse 1.5s ease-in-out infinite"></div>
       </div>`).join('');
 
-    const { data: artworks, error } = await supa
+    let { data: artworks, error } = await supa
       .from('artworks')
       .select(`*, artists(display_name, id, verified)`)
       .order('score', { ascending: false })
       .limit(40);
+
+    // si falla por la columna verified (aún no migrada), reintenta sin ella
+    if (error) {
+      const retry = await supa
+        .from('artworks')
+        .select(`*, artists(display_name, id)`)
+        .order('score', { ascending: false })
+        .limit(40);
+      artworks = retry.data;
+      error = retry.error;
+    }
 
     if (error || !artworks || artworks.length === 0) {
       // Fallback to demo pins if DB is empty
@@ -3181,10 +3192,10 @@
 
     if (!artist) return;
 
-    // load profile data (avatar, etc.)
+    // load profile data (avatar, etc.) — select * para no fallar si falta columna
     const { data: prof } = await supa
       .from('profiles')
-      .select('avatar_url, username')
+      .select('*')
       .eq('id', artistId)
       .single();
 
@@ -4132,6 +4143,54 @@
     closeFilters();
     renderTags();
     applyFilterToMuro();
+  }
+
+  let searchTimer = null;
+  function searchMuro(query) {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => doSearchMuro(query), 200);
+  }
+
+  function doSearchMuro(query) {
+    const wall = document.getElementById('home-wall');
+    if (!wall) return;
+    const q = query.trim().toLowerCase();
+
+    // sin búsqueda → recargar muro normal
+    if (!q) { applyFilterToMuro(); return; }
+
+    const filtered = allArtworks.filter(p => {
+      const hay = [
+        p.title, p.game, p.tipo, p.tecnica,
+        p.artists?.display_name || p.artist
+      ].filter(Boolean).join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+
+    const stCls = { for_sale:'badge-sale', sold:'badge-sold', portfolio:'badge-folio' };
+    const stLbl = { for_sale:'En venta', sold:'Vendida', portfolio:'Portfolio' };
+
+    if (filtered.length === 0) {
+      wall.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem 0;color:var(--text-mute);font-size:0.9rem">No se encontró nada para "${query}".</div>`;
+      return;
+    }
+
+    wall.innerHTML = filtered.map((p) => {
+      const st  = p.status || p.state || 'portfolio';
+      const idx = allArtworks.indexOf(p);
+      const i   = idx;
+      return `<div class="pin" onclick="openModal(${idx})">
+        <div class="pin-card">
+          ${p.image_url ? `<img src="${p.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:14px 14px 0 0" loading="lazy">` : `<div class="pin-art a${(i%10)+1}" style="width:100%;height:100%"></div>`}
+          <div class="pin-badge ${stCls[st]||'badge-folio'}">${stLbl[st]||'Portfolio'}</div>
+        </div>
+        <div class="pin-meta">
+          <div class="pin-title">${p.title}</div>
+          <div class="pin-sub">${p.artists?.display_name || p.artist || ''}</div>
+          ${p.price ? `<div class="pin-price">${p.price}€</div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
   }
 
   function applyFilterToMuro() {
