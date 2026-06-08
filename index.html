@@ -3157,8 +3157,10 @@
     const av   = document.getElementById('user-av');
     const avLg = document.getElementById('user-av-lg');
     const ddName = document.getElementById('user-dd-name');
-    if (av)   av.textContent   = initial;
-    if (avLg) avLg.textContent = initial;
+    // limpiar cualquier avatar anterior (evita que se comparta entre usuarios)
+    [av, avLg].forEach(el => {
+      if (el) { el.style.backgroundImage = ''; el.textContent = initial; }
+    });
     if (ddName && name) ddName.textContent = name;
   }
 
@@ -3169,6 +3171,11 @@
     if (um) um.style.display = 'none';
     const dash = document.getElementById('udd-dash');
     if (dash) dash.style.display = 'none';
+    // limpiar avatares para el siguiente usuario
+    ['user-av', 'user-av-lg', 'set-avatar-preview'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.style.backgroundImage = ''; el.textContent = '🎨'; }
+    });
     isArtist = false;
   }
 
