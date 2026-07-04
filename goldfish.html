@@ -796,6 +796,30 @@ body.mp-active .floatchrome,body.mp-active #zoomctrls{display:none!important}
 /* vidas pequeñas en las pastillas del switcher */
 .mp-avatar .lifechip{margin-left:6px;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--gold)}
 
+/* ===== sesión TAL en el topbar ===== */
+.topauth{display:flex;align-items:center;margin-left:auto}
+.topauth .authbtn{padding:7px 16px;border-radius:99px;background:var(--surface-2);border:1px solid var(--gold-dim);
+  color:var(--gold);font-size:12.5px;cursor:pointer;white-space:nowrap}
+.topauth .userchip{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;border-radius:99px;
+  background:var(--surface-2);border:1px solid var(--line);cursor:pointer;max-width:180px}
+.topauth .userchip img{width:26px;height:26px;border-radius:50%;object-fit:cover}
+.topauth .userchip .uv{width:26px;height:26px;border-radius:50%;background:var(--accent-dim);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+.topauth .userchip span{font-size:12.5px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.taljump{margin-left:10px;font-size:11px;color:var(--text-mute);border:1px solid var(--line);border-radius:8px;
+  padding:6px 10px;text-decoration:none;white-space:nowrap}
+.taljump:hover{color:var(--gold);border-color:var(--gold-dim)}
+.usermenu{position:fixed;top:54px;right:12px;z-index:120;min-width:210px;background:var(--panel);
+  border:1px solid var(--gold-dim);border-radius:13px;padding:8px;box-shadow:0 14px 44px rgba(0,0,0,.6);
+  display:flex;flex-direction:column;gap:2px}
+.usermenu .um-head{font-size:11.5px;color:var(--text-mute);padding:8px 12px;border-bottom:1px solid var(--line);margin-bottom:4px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.usermenu button,.usermenu a{text-align:left;background:none;border:none;color:var(--text);font-size:13px;
+  padding:9px 12px;border-radius:8px;cursor:pointer;text-decoration:none;font-family:'Geist',sans-serif;display:block}
+.usermenu button:hover,.usermenu a:hover{background:var(--surface-2)}
+.usermenu .um-sep{height:1px;background:var(--line);margin:4px 0}
+.usermenu .um-out{color:var(--red)}
+
 /* etiqueta de tipo elegido */
 .chosenlab{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);z-index:3;
   font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.08em;background:rgba(5,8,16,.85);
@@ -844,6 +868,20 @@ body.mp-active .floatchrome,body.mp-active #zoomctrls{display:none!important}
     <button id="tab-stats" onclick="showScreen('stats')" style="display:none">Estadísticas</button>
     <button id="tab-game" onclick="showScreen('game')" style="display:none">Simulación</button>
   </div>
+  <div class="topauth" id="topauth"></div>
+  <a class="taljump" href="/" title="Ir a The Alter Life">TAL ↗</a>
+</div>
+
+<!-- menú desplegable del usuario -->
+<div class="usermenu" id="usermenu" style="display:none">
+  <div class="um-head" id="um-head"></div>
+  <button onclick="umGo('mydecks')">🗂 Mis mazos</button>
+  <button id="um-deck" onclick="umGo('deck')" style="display:none">✏️ Editor</button>
+  <button id="um-stats" onclick="umGo('stats')" style="display:none">📊 Estadísticas</button>
+  <button id="um-game" onclick="umGo('game')" style="display:none">🎮 Simulación</button>
+  <div class="um-sep"></div>
+  <a href="/">↗ Ir a The Alter Life</a>
+  <button class="um-out" onclick="authLogout()">Cerrar sesión</button>
 </div>
 
 
@@ -1517,14 +1555,77 @@ function renderMyDecks(){
   }).join('')||'<div class="empty">Ningún mazo coincide con la búsqueda.</div>';
 }
 
-function fakeLogin(){
-  // hardcode — en prod: window.location='https://thealterlife.app/login?redirect=goldfish'
-  userLoggedIn=true;
+/* ===== SESIÓN COMPARTIDA CON THE ALTER LIFE =====
+   Mismo dominio + mismo proyecto Supabase → la sesión de TAL ya está en el
+   navegador; aquí solo la leemos. Login con Google si no hay sesión. */
+let authUser=null;
+function getSupaClient(){
+  if(!usingSupa()) return null;
+  return window._supaClient || (window._supaClient = window.supabase.createClient(MP_SUPA.url, MP_SUPA.key));
+}
+async function initAuth(){
+  const client=getSupaClient();
+  if(!client){ renderTopAuth(); return; }
+  try{
+    const {data}=await client.auth.getSession();
+    authApply(data&&data.session);
+    client.auth.onAuthStateChange((_ev,session)=>authApply(session));
+  }catch(e){ renderTopAuth(); }
+}
+function authApply(session){
+  authUser = session ? session.user : null;
+  userLoggedIn = !!authUser;
   loadSavedDecks();
   renderMyDecks();
   renderTopAuth();
 }
-function renderTopAuth(){/* placeholder para botón de sesión si se añade a topbar */}
+function fakeLogin(){ authLogin(); } // compat con enlaces existentes
+function authLogin(){
+  const client=getSupaClient();
+  if(!client){ alert('Sin conexión con The Alter Life. Comprueba tu red.'); return; }
+  client.auth.signInWithOAuth({provider:'google', options:{redirectTo: location.origin + location.pathname}});
+}
+async function authLogout(){
+  const client=getSupaClient();
+  if(client){ try{ await client.auth.signOut(); }catch(e){} }
+  authApply(null);
+  toggleUserMenu(false);
+}
+function userName(){
+  if(!authUser) return '';
+  return (authUser.user_metadata&&(authUser.user_metadata.full_name||authUser.user_metadata.name)) || authUser.email || 'Usuario';
+}
+function renderTopAuth(){
+  const el=document.getElementById('topauth'); if(!el) return;
+  if(authUser){
+    const av=authUser.user_metadata&&authUser.user_metadata.avatar_url;
+    const nm=userName();
+    el.innerHTML=`<div class="userchip" onclick="toggleUserMenu()">
+      ${av?`<img src="${av}" alt="" referrerpolicy="no-referrer">`:`<span class="uv">${nm.slice(0,1).toUpperCase()}</span>`}
+      <span>${nm.split(' ')[0]}</span></div>`;
+  }else{
+    el.innerHTML=`<button class="authbtn" onclick="authLogin()">Entrar con TAL</button>`;
+  }
+}
+function toggleUserMenu(force){
+  const m=document.getElementById('usermenu'); if(!m) return;
+  const show = force!==undefined? force : m.style.display==='none';
+  m.style.display = show? 'flex':'none';
+  if(show){
+    document.getElementById('um-head').textContent=userName();
+    // las entradas del menú siguen la misma visibilidad que las tabs
+    ['deck','stats','game'].forEach(k=>{
+      const tab=document.getElementById('tab-'+k);
+      const item=document.getElementById('um-'+k);
+      if(tab&&item) item.style.display=tab.style.display;
+    });
+  }
+}
+function umGo(screen){ toggleUserMenu(false); showScreen(screen); }
+document.addEventListener('pointerdown',e=>{
+  const m=document.getElementById('usermenu');
+  if(m&&m.style.display!=='none'&&!m.contains(e.target)&&!e.target.closest('.topauth')) toggleUserMenu(false);
+});
 
 /* abrir un mazo guardado → carga en el editor y va a su detalle/edición */
 function openSavedDeck(id){
@@ -4726,6 +4827,12 @@ function mpLeaveRoom(){
   loadSavedDecks();
   // arrancar en la pantalla de Mis mazos
   if(typeof showScreen==='function')showScreen('mydecks');
+  // sesión TAL: la librería del CDN carga con defer, así que esperamos a que esté
+  const tryAuth=(n)=>{
+    if(window.supabase||n>20){ initAuth(); }
+    else setTimeout(()=>tryAuth(n+1),150);
+  };
+  tryAuth(0);
 })();
 </script>
 </body>
