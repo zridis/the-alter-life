@@ -109,6 +109,10 @@
   }
   .user-dd-item:hover { background: var(--surface); color: var(--text); }
   .user-dd-item span { font-size: 0.85rem; width: 16px; text-align: center; }
+  #udd-goldfish { opacity: 0.6; }
+  #udd-goldfish:hover { opacity: 1; }
+  #goldfish-icon-slot { font-size: 0.9rem; }
+  #goldfish-icon-slot img { width: 16px; height: 16px; object-fit: contain; image-rendering: pixelated; vertical-align: middle; }
   .user-dd-sep { height: 1px; background: var(--border-soft); margin: 0.2rem 0; }
   .user-dd-footer {
     display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;
@@ -1544,6 +1548,9 @@
         </div>
         <div class="user-dd-item" onclick="closeUserMenu();go('settings')">
           <span><i data-lucide="settings"></i></span> Ajustes
+        </div>
+        <div class="user-dd-item" onclick="closeUserMenu();window.location.href='/goldfish'" id="udd-goldfish">
+          <span id="goldfish-icon-slot">🐟</span> Goldfish
         </div>
         <div class="user-dd-sep"></div>
         <div class="user-dd-item" onclick="logout()">
