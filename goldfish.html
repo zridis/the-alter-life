@@ -100,7 +100,6 @@ label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;font-wei
 .frame .ft{margin-top:auto;color:var(--muted);font-size:9px}
 .tbl-card{will-change:transform;transition:transform .12s ease,box-shadow .12s}
 /* zona de hover estable: un ::after que cubre la posición original aunque la carta suba */
-.tbl-card::after{content:'';position:absolute;left:0;right:0;top:0;bottom:-10px;z-index:-1}
 .tbl-card:hover{transform:translateY(-8px) scale(1.04);z-index:30;transform-origin:bottom center}
 .card.tapped.tbl-card:hover{transform:rotate(90deg) scale(.92)}
 .card.tapped{transform:rotate(90deg) scale(.9);margin:0 16px}
@@ -406,6 +405,10 @@ input[type=text]:focus,textarea:focus,input[type=number]:focus,select:focus{bord
 /* la topbar normal desaparece al entrar en Simulación */
 body.sim-mode .topbar{display:none}
 /* chrome flotante superpuesto al tablero, esquina superior izquierda */
+#lifebtn{position:fixed;top:10px;right:12px;z-index:47;padding:9px 16px;border-radius:99px;background:var(--surface);
+  border:1px solid var(--gold-dim);color:var(--gold);font-size:13px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+#lifebtn:active{transform:scale(.96)}
+body.mp-active #lifebtn{display:none!important}
 .floatchrome{position:fixed;top:10px;left:12px;z-index:46;display:flex;align-items:center;gap:10px;pointer-events:none}
 .floatchrome>*{pointer-events:auto}
 .floatlogo{height:30px;width:30px;border-radius:8px;filter:drop-shadow(0 2px 10px rgba(0,0,0,.7))}
@@ -1051,6 +1054,7 @@ body.mp-active .floatchrome,body.mp-active #zoomctrls{display:none!important}
       <button class="lcov-close" onclick="mpToggleLifePanel()">Cerrar</button>
     </div>
     <!-- chrome flotante estilo Arena: logo + hamburguesa, superpuesto al tablero -->
+    <button id="lifebtn" onclick="openLifeCounter()" title="Contador de vidas" style="display:none">❤ <span id="lifebtn-txt">20</span></button>
     <div class="floatchrome" id="floatchrome" style="display:none">
       <button class="hamburger" onclick="toggleHamburguesa()" title="Menú" aria-label="Menú">
         <span></span><span></span><span></span>
@@ -1127,14 +1131,7 @@ body.mp-active .floatchrome,body.mp-active #zoomctrls{display:none!important}
           <span id="lifeval-1">20</span></div>
         <button class="lbtn" onclick="chgLife(1,1)">+</button>
       </div>
-      <div class="lifebox" id="lifebox-0">
-        <button class="lbtn" onclick="chgLife(0,-1)">−</button>
-        <div class="lifegem"><svg viewBox="0 0 24 24"><defs><radialGradient id="lg0" cx="35%" cy="30%" r="85%">
-          <stop offset="0%" stop-color="#F0A0A0"/><stop offset="100%" stop-color="#8C1E2E"/></radialGradient></defs>
-          <path d="M12 21C7 16.5 3 13 3 8.8 3 6 5.2 4 7.8 4c1.7 0 3.2.9 4.2 2.3C13 4.9 14.5 4 16.2 4 18.8 4 21 6 21 8.8c0 4.2-4 7.7-9 12.2z" fill="url(#lg0)" stroke="rgba(0,0,0,.5)"/></svg>
-          <span id="lifeval-0">20</span></div>
-        <button class="lbtn" onclick="chgLife(0,1)">+</button>
-      </div>
+      <span id="lifeval-0" style="display:none">20</span>
       <div class="manabar" id="manabar-0"></div>
     </div>
 
@@ -1873,6 +1870,7 @@ function showScreen(s){
   const inGame=(s==='game');
   document.body.classList.toggle('sim-mode',inGame);
   const fc=$('floatchrome');if(fc)fc.style.display=inGame?'':'none';
+  const lb=$('lifebtn');if(lb)lb.style.display=(inGame && !document.body.classList.contains('mp-active'))?'':'none';
   // cerrar el menú hamburguesa al cambiar de pantalla
   const hm=$('hamburguesa-menu');if(hm)hm.classList.remove('open');
   // orientación: bloquear horizontal al entrar; liberar al salir
@@ -2378,6 +2376,29 @@ function mkPlayer(i){
   return p;
 }
 function vsMode(){return decks[1].length>0;}
+function myDisplayName(){ return (typeof authUser!=='undefined' && authUser && typeof userName==='function') ? (userName()||'Tú') : 'Tú'; }
+
+// La mesa usa perspective+rotateX (mesa 3D "real"). Con transformaciones 3D,
+// elementFromPoint del navegador a veces atraviesa la carta y da el contenedor
+// padre (bug de hit-test nativo con preserve-3d), rompiendo clic simple y doble
+// clic con ratón. elementsFromPoint (plural) sí encuentra bien la carta, así
+// que reenrutamos aquí cuando el clic nativo no aterrizó en ninguna carta.
+function updateLifeBtn(){
+  const t=document.getElementById('lifebtn-txt'); if(!t||typeof life==='undefined') return;
+  const vs=(typeof vsMode==='function' && vsMode());
+  t.textContent = vs? `${life[0]} · ${life[1]}` : `${life[0]}`;
+}
+function reroute3DClick(e, attr){
+  if(e.target.closest && e.target.closest('.card')) return; // ya fue a la carta, nada que hacer
+  if(typeof document.elementsFromPoint!=='function') return;
+  const stack = document.elementsFromPoint(e.clientX, e.clientY);
+  const card = stack.find(el=>el.classList && el.classList.contains('card'));
+  if(card && typeof card[attr]==='function'){
+    card[attr](e);
+  }
+}
+document.addEventListener('click', e=>reroute3DClick(e,'onclick'), true);
+document.addEventListener('dblclick', e=>reroute3DClick(e,'ondblclick'), true);
 function startGame(){
   if(!decks[0].length){alert('Carga el mazo principal primero.');return;}
   showScreen('game');newGame();
@@ -2435,17 +2456,19 @@ function newGame(){
   life=[(commanders[0]&&commanders[0].length)?40:20,(commanders[1]&&commanders[1].length)?40:20];
   panX=0;panY=0;panZoom=1;applyPan();
   ['0','1'].forEach(p=>{const el=$('lifeval-'+p);if(el)el.textContent=life[+p];});
+  updateLifeBtn();
   const vs=vsMode();
   $('gamescene').classList.toggle('vs',vs);
-  ['handarea-1','z-lands-1','z-mid-1','z-creat-1','centerline','hud-p2','manabar-1','activebadge','lifebox-1'].forEach(id=>{
+  ['handarea-1','z-lands-1','z-mid-1','z-creat-1','centerline','hud-p2','manabar-1','activebadge'].forEach(id=>{
     const e=$(id);if(e)e.style.display=vs?'':'none';
   });
+  const oldlb=$('lifebox-1'); if(oldlb) oldlb.style.display='none'; // sustituido por el panel de vidas arriba-derecha
   ['0','1'].forEach(p=>{const e=$('cmdpile-'+p);if(e)e.style.display=(G.players[+p]&&G.players[+p].cmd)?'':'none';});
   selected.clear();
   loglines=[];history=[];
   $('gamelog').innerHTML='';
-  if(vs)log('meta',`🎲 Sorteo: empieza ${G.starter?'el Rival':'Tú'}`);
-  log('turn','— Turno 1 —'+(vs?(' · juega: '+(G.starter?'Rival':'Tú')):''));
+  if(vs)log('meta',`🎲 Sorteo: empieza ${G.starter?'el Rival':myDisplayName()}`);
+  log('turn','— Turno 1 —'+(vs?(' · juega: '+(G.starter?'Rival':myDisplayName())):''));
   renderGame();
 }
 function cur(){return G.players[G.active];}
@@ -2640,11 +2663,11 @@ function renderGame(){
   }
   $('turnnum').textContent='Turno '+G.turn;
   {const mb=$('mullbtn-hm');if(mb)mb.disabled=G.turn>1;}
-  if(vs)$('activebadge').textContent='Juegas: '+(G.active?'Rival':'Tú');
+  if(vs)$('activebadge').textContent='Juegas: '+(G.active?'Rival':myDisplayName());
 }
 function renderMana(P,p){
   const free=freeSources(P).length,total=manaSources(P).length;
-  let h=vsMode()?`<span class="manalabel">${p?'Rival':'Tú'}</span>`:'';
+  let h=vsMode()?`<span class="manalabel">${p?'Rival':myDisplayName()}</span>`:'';
   MANA_COLORS.forEach(k=>{
     if(P.pool[k]>0)h+=`<span class="poolgem g-${k}" title="${COLOR_INFO[k].n} en pool">${P.pool[k]}</span>`;
   });
@@ -2841,7 +2864,7 @@ function passTurn(){
   P.landPlayed=false;
   manaSources(P).forEach(c=>c.tapped=false);
   P.pool=emptyPool();
-  log('turn',`— Turno ${G.turn}${vsMode()?(' · juega: '+(G.active?'Rival':'Tú')):''} —`);
+  log('turn',`— Turno ${G.turn}${vsMode()?(' · juega: '+(G.active?'Rival':myDisplayName())):''} —`);
   drawFor(G.active);
 }
 function castCommander(p,ci){
@@ -2867,6 +2890,7 @@ function cmdMenu(e,p,ci){
 function chgLife(p,d){
   life[p]=Math.max(0,life[p]+d);
   const el=$('lifeval-'+p);if(el)el.textContent=life[p];
+  updateLifeBtn();
   if(life[p]===0)log('win',`☠ ${p?'Rival':'Jugador'} a 0 vidas`);
   if(MP.started && MP_VIEW.isMe && !MP_VIEW.readonly && p===0 && MP.mine){
     MP.mine.life=life[0]; mpBroadcastState(); mpRenderSwitcher(); mpRenderLifePanel();
@@ -2895,7 +2919,17 @@ function cardDbl(e,id,zone){
   if(zone==='hand'){playCard(id,true);selected.delete(id);}
   else if(zone==='lands'||zone==='field'){
     const c=findCard(id);
-    if(c){c.tapped=!c.tapped;log('meta',`${c.tapped?'↻ girada':'↺ enderezada'}: ${c.name}`);renderGame();}
+    if(c){
+      c.tapped=!c.tapped;
+      log('meta',`${c.tapped?'↻ girada':'↺ enderezada'}: ${c.name}`);
+      // actualizar SOLO este nodo (no re-render completo: si no, el 2º clic del
+      // doble-clic caería sobre un elemento recién creado y no se contaría)
+      const el=document.getElementById(id);
+      if(el) el.classList.toggle('tapped', c.tapped);
+      else renderGame();
+      // sincronizar en modo remoto sin repintar
+      if(typeof MP!=='undefined' && MP.started && MP_VIEW.isMe && !MP_VIEW.readonly) mpBroadcastState();
+    }
   }
 }
 /* ---------- equipos / auras: adjuntar ---------- */
@@ -4393,7 +4427,7 @@ async function mpJoinRoom(){
   if(!ok) return;
   MESH.onData = mpHandleData;
   MESH.onPeerChange = mpOnPeerChange;
-  MP.myName = 'Jugador '+MESH.myId.slice(0,4).toUpperCase();
+  MP.myName = (typeof userName==='function' && userName()) ? userName() : ('Jugador '+MESH.myId.slice(0,4).toUpperCase());
   $('mp-step-join').style.display='none';
   $('mp-step-lobby').style.display='';
   $('mp-close-row').style.display='none';
@@ -4634,6 +4668,7 @@ function mpBroadcastState(){
 function mpRenderAll(){ mpRenderSwitcher(); mpRenderTable(); mpRenderLifePanel(); }
 
 function mpPlayerLabel(id){
+  if(LC_LOCAL) return (MP._localNames&&MP._localNames[id])||id;
   if(id===MESH.myId) return MP.myName+' (tú)';
   return MP.names[id] || ('Jugador '+id.slice(0,4).toUpperCase());
 }
@@ -4730,6 +4765,18 @@ function mpApplyReadonly(ro){
   const hand=$('handarea-0'); if(hand) hand.style.pointerEvents = ro ? 'none' : '';
 }
 
+let LC_LOCAL=false;
+function lcPlayerObj(id){ return id===lcMyId() ? MP.mine : MP.remote[id]; }
+function lcSyncClassicLife(id,val){
+  // en modo local, mantener sincronizado el array life[] clásico del motor
+  if(!LC_LOCAL) return;
+  if(id==='me') life[0]=val;
+  else if(id==='rival') life[1]=val;
+  const el=$('lifeval-'+(id==='me'?'0':'1')); if(el) el.textContent=val;
+  updateLifeBtn();
+}
+function lcMyId(){ return LC_LOCAL ? 'me' : MESH.myId; }
+function lcActive(){ return MP.started || LC_LOCAL; }
 const LC_COUNTERS={
   monarch:{ic:'👑',label:'Monarca',bool:true,exclusive:true},
   poison:{ic:'☠',label:'Veneno'},
@@ -4738,6 +4785,25 @@ const LC_COUNTERS={
   ctax:{ic:'♜',label:'C.Tax',step:2},
   treasure:{ic:'⛃',label:'Tesoro'},
 };
+/* Abre el contador en cualquier modo. En solo/1v1 construimos un MP ligero
+   desde el estado de juego local (life[] y G.players) para reutilizar el mismo
+   overlay y motor de render del multijugador. */
+function openLifeCounter(){
+  if(!MP.started){
+    // modo local: fabricar pseudo-estado
+    const isVs = (typeof vsMode==='function' && vsMode());
+    LC_LOCAL=true;
+    MP.order = isVs? ['me','rival'] : ['me'];
+    MP.activeIdx=0;
+    MP.mine = MP.mine || {};
+    MP.mine.life = life[0];
+    MP.mine.cmdDmg = MP.mine.cmdDmg||{};
+    MP.mine.counters = MP.mine.counters||{};
+    MP.remote = isVs? {rival:{life:life[1], cmdDmg:{}, counters:{}}} : {};
+    MP._localNames = isVs? {me:myDisplayName(), rival:'Rival'} : {me:myDisplayName()};
+  }
+  mpToggleLifePanel();
+}
 function mpToggleLifePanel(){
   const p=$('lcov'); if(!p) return;
   const showing = p.classList.contains('show');
@@ -4746,56 +4812,63 @@ function mpToggleLifePanel(){
 }
 
 /* buffer de daño reciente en mi tarjeta */
-const _lcBuf={sum:0,timer:null};
-function lcMyLife(d){
-  if(!MP.mine) return;
-  MP.mine.life+=d; life[0]=MP.mine.life;
-  _lcBuf.sum+=d;
-  const el=$('lcov-buf-me');
-  if(el){ el.textContent=(_lcBuf.sum>0?'+':'')+_lcBuf.sum; el.className='lcov-buf show '+(_lcBuf.sum<0?'neg':'pos'); }
-  clearTimeout(_lcBuf.timer);
-  _lcBuf.timer=setTimeout(()=>{
-    if(_lcBuf.sum!==0) log(_lcBuf.sum<0?'bad':'good', `❤ ${_lcBuf.sum>0?'+':''}${_lcBuf.sum} → ${MP.mine.life}`);
-    _lcBuf.sum=0;
+const _lcBuf={}; // un buffer de daño reciente por jugador (id -> {sum,timer})
+function lcMyLife(d, targetId){
+  const id = targetId || lcMyId();
+  const P = lcPlayerObj(id); if(!P) return;
+  P.life+=d;
+  lcSyncClassicLife(id, P.life);
+  const isMine = id===lcMyId();
+  const buf = _lcBuf[id] = _lcBuf[id] || {sum:0, timer:null};
+  buf.sum+=d;
+  const el=$('lcov-buf-'+(isMine?'me':id));
+  if(el){ el.textContent=(buf.sum>0?'+':'')+buf.sum; el.className='lcov-buf show '+(buf.sum<0?'neg':'pos'); }
+  clearTimeout(buf.timer);
+  buf.timer=setTimeout(()=>{
+    if(buf.sum!==0) log(buf.sum<0?'bad':'good', `❤ ${mpPlayerLabel(id)} ${buf.sum>0?'+':''}${buf.sum} → ${P.life}`);
+    buf.sum=0;
     if(el) el.classList.remove('show');
   },1600);
-  const card=$('lcov-card-me');
+  const card=$('lcov-card-'+(isMine?'me':id));
   if(card){
     card.classList.remove('hurt','healed'); void card.offsetWidth;
     card.classList.add(d<0?'hurt':'healed');
     setTimeout(()=>card.classList.remove('hurt','healed'),320);
-    const lv=card.querySelector('.lcov-life'); if(lv) lv.textContent=MP.mine.life;
+    const lv=card.querySelector('.lcov-life'); if(lv) lv.textContent=P.life;
   }
-  const lb0=$('lifeval-0'); if(lb0) lb0.textContent=MP.mine.life;
-  mpBroadcastState(); mpRenderSwitcher();
+  if(LC_LOCAL){ if(typeof renderGame==='function' && G){} }
+  else { mpBroadcastState(); mpRenderSwitcher(); }
 }
 
 // El daño de comandante lo lleva cada uno de sí mismo (mesa real pura). Al
 // sumar cmd también baja la vida; al corregir, la devuelve.
-function mpCmdDmg(opponentId, delta){
-  if(!MP.mine) return;
-  if(!MP.mine.cmdDmg) MP.mine.cmdDmg={};
-  const before=MP.mine.cmdDmg[opponentId]||0;
+function mpCmdDmg(opponentId, delta, targetId){
+  const id = targetId || lcMyId();
+  const P = lcPlayerObj(id); if(!P) return;
+  if(!P.cmdDmg) P.cmdDmg={};
+  const before=P.cmdDmg[opponentId]||0;
   const next=Math.max(0,before+delta);
   if(next===before) return;
-  MP.mine.cmdDmg[opponentId]=next;
-  lcMyLife(-(next-before));
-  if(delta>0 && next>=21) mpToast('☠️ Comandante de '+mpPlayerLabel(opponentId)+' te ha hecho 21+ de daño');
+  P.cmdDmg[opponentId]=next;
+  lcMyLife(-(next-before), id);
+  if(delta>0 && next>=21) mpToast('☠️ Comandante de '+mpPlayerLabel(opponentId)+' ha hecho 21+ de daño a '+mpPlayerLabel(id));
   mpRenderLifePanel();
 }
-function lcMyCounter(k,d){
-  if(!MP.mine) return;
-  if(!MP.mine.counters) MP.mine.counters={};
+function lcMyCounter(k,d,targetId){
+  const id = targetId || lcMyId();
+  const P = lcPlayerObj(id); if(!P) return;
+  if(!P.counters) P.counters={};
   const def=LC_COUNTERS[k];
   if(def.bool){
-    if(MP.mine.counters[k]){ delete MP.mine.counters[k]; }
-    else MP.mine.counters[k]=1;
+    if(P.counters[k]){ delete P.counters[k]; }
+    else P.counters[k]=1;
   }else{
-    const next=Math.max(0,(MP.mine.counters[k]||0)+d);
-    if(next===0) delete MP.mine.counters[k]; else MP.mine.counters[k]=next;
-    if(k==='poison'&&next>=10) mpToast('☠️ Has llegado a 10 de veneno');
+    const next=Math.max(0,(P.counters[k]||0)+d);
+    if(next===0) delete P.counters[k]; else P.counters[k]=next;
+    if(k==='poison'&&next>=10) mpToast('☠️ '+mpPlayerLabel(id)+' ha llegado a 10 de veneno');
   }
-  mpBroadcastState(); mpRenderLifePanel();
+  if(!LC_LOCAL) mpBroadcastState();
+  mpRenderLifePanel();
 }
 
 /* tap corto / mantener con repetición — mismo patrón que el resto del simulador */
@@ -4820,24 +4893,26 @@ function lcTapHold(el,onTap,onRepeat){
 }
 
 function mpRenderLifePanel(){
-  const row=$('lcov-row'); if(!row||!MP.started) return;
+  const row=$('lcov-row'); if(!row||!lcActive()) return;
   if(!$('lcov').classList.contains('show')) return;
+  const MYID=lcMyId();
   const TINTS=['#9b5cff','#e8c265','#3fae6a','#5c9bff','#e05555','#e0a93a'];
   row.innerHTML = MP.order.map((id,idx)=>{
-    const isMe = id===MESH.myId;
+    const isMe = id===MYID;
+    const canEdit = LC_LOCAL || isMe; // en local (mismo dispositivo) editas las dos mesas
     const st = isMe ? MP.mine : MP.remote[id];
     const lifeV = st? st.life : '—';
     const cmdDmg = (st&&st.cmdDmg)||{};
     const counters = (st&&st.counters)||{};
     const isTurn = MP.order[MP.activeIdx]===id;
     const dead = (typeof lifeV==='number'&&lifeV<=0)||Object.values(cmdDmg).some(v=>v>=21);
-    // chips cmd: para MÍ, un chip editable por rival; para otros, sus chips >0
+    // chips cmd: si puedo editar esta mesa, un chip por cada rival suyo; si no, solo lectura de los que tenga >0
     let cmdHTML='';
-    if(isMe){
+    if(canEdit){
       cmdHTML = MP.order.filter(oid=>oid!==id).map(oid=>{
         const v=cmdDmg[oid]||0;
         const cls=v>=21?'crit':(v>=15?'warn':'');
-        return `<span class="cc tappable ${cls}" data-lc-cmd="${oid}"><small>${mpPlayerLabel(oid).slice(0,6)}</small>${v}</span>`;
+        return `<span class="cc tappable ${cls}" data-lc-cmd="${oid}" data-lc-target="${id}"><small>${mpPlayerLabel(oid).slice(0,6)}</small>${v}</span>`;
       }).join('');
     }else{
       cmdHTML = Object.entries(cmdDmg).filter(([k,v])=>v>0).map(([k,v])=>{
@@ -4847,41 +4922,41 @@ function mpRenderLifePanel(){
     }
     const badgesHTML = Object.entries(counters).filter(([k,v])=>v>0&&LC_COUNTERS[k]).map(([k,v])=>{
       const def=LC_COUNTERS[k];
-      const tap = isMe? `data-lc-counter="${k}" ` : '';
-      return `<span class="lcov-badge ${isMe?'tappable':''}" ${tap}>${def.ic}${def.bool?'':' <b>'+v+'</b>'}</span>`;
+      const tap = canEdit? `data-lc-counter="${k}" data-lc-target="${id}" ` : '';
+      return `<span class="lcov-badge ${canEdit?'tappable':''}" ${tap}>${def.ic}${def.bool?'':' <b>'+v+'</b>'}</span>`;
     }).join('');
-    const counterBar = isMe? `<div class="lcov-counterbar">${Object.entries(LC_COUNTERS).map(([k,def])=>
-      `<button class="lcov-cbtn ${counters[k]?'on':''}" data-lc-cadd="${k}" title="${def.label}">${def.ic}</button>`).join('')}</div>`:'';
+    const counterBar = canEdit? `<div class="lcov-counterbar">${Object.entries(LC_COUNTERS).map(([k,def])=>
+      `<button class="lcov-cbtn ${counters[k]?'on':''}" data-lc-cadd="${k}" data-lc-target="${id}" title="${def.label}">${def.ic}</button>`).join('')}</div>`:'';
     return `<div class="lcov-card ${isMe?'me':''} ${dead?'dead':''}" id="lcov-card-${isMe?'me':id}" style="--tint:${TINTS[idx%TINTS.length]}">
       <span class="nm ${isTurn?'turn':''}">${mpPlayerLabel(id)}</span>
       <div class="lcov-center">
         <span class="lcov-life">${dead?'☠':lifeV}</span>
-        ${isMe?`<span class="lcov-sign minus">−</span><span class="lcov-sign plus">＋</span>
-        <div class="lcov-hit minus" data-lc-life="-1"></div>
-        <div class="lcov-hit plus" data-lc-life="1"></div>
-        <div class="lcov-buf" id="lcov-buf-me"></div>`:''}
+        ${canEdit?`<span class="lcov-sign minus">−</span><span class="lcov-sign plus">＋</span>
+        <div class="lcov-hit minus" data-lc-life="-1" data-lc-target="${id}"></div>
+        <div class="lcov-hit plus" data-lc-life="1" data-lc-target="${id}"></div>
+        <div class="lcov-buf" id="lcov-buf-${isMe?'me':id}"></div>`:''}
       </div>
       <div class="lcov-cmd">${cmdHTML}</div>
       <div class="lcov-badges">${badgesHTML}</div>
       ${counterBar}
     </div>`;
   }).join('');
-  // interacciones solo en mi tarjeta
+  // interacciones: cada control lleva su propio jugador objetivo en data-lc-target
   row.querySelectorAll('[data-lc-life]').forEach(z=>{
-    const d=+z.dataset.lcLife;
-    lcTapHold(z, ()=>lcMyLife(d), (c)=>lcMyLife(d*(c>=5?5:1)));
+    const d=+z.dataset.lcLife, target=z.dataset.lcTarget;
+    lcTapHold(z, ()=>lcMyLife(d,target), (c)=>lcMyLife(d*(c>=5?5:1),target));
   });
   row.querySelectorAll('[data-lc-cmd]').forEach(c=>{
-    const oid=c.dataset.lcCmd;
-    lcTapHold(c, ()=>mpCmdDmg(oid,1), ()=>mpCmdDmg(oid,-1));
+    const oid=c.dataset.lcCmd, target=c.dataset.lcTarget;
+    lcTapHold(c, ()=>mpCmdDmg(oid,1,target), ()=>mpCmdDmg(oid,-1,target));
   });
   row.querySelectorAll('[data-lc-cadd]').forEach(b=>{
-    const k=b.dataset.lcCadd;
-    lcTapHold(b, ()=>lcMyCounter(k, LC_COUNTERS[k].step||1), ()=>{ if(!LC_COUNTERS[k].bool) lcMyCounter(k,-1); });
+    const k=b.dataset.lcCadd, target=b.dataset.lcTarget;
+    lcTapHold(b, ()=>lcMyCounter(k, LC_COUNTERS[k].step||1, target), ()=>{ if(!LC_COUNTERS[k].bool) lcMyCounter(k,-1,target); });
   });
   row.querySelectorAll('[data-lc-counter]').forEach(bd=>{
-    const k=bd.dataset.lcCounter;
-    lcTapHold(bd, ()=>lcMyCounter(k, LC_COUNTERS[k].step||1), ()=>{ if(!LC_COUNTERS[k].bool) lcMyCounter(k,-1); });
+    const k=bd.dataset.lcCounter, target=bd.dataset.lcTarget;
+    lcTapHold(bd, ()=>lcMyCounter(k, LC_COUNTERS[k].step||1, target), ()=>{ if(!LC_COUNTERS[k].bool) lcMyCounter(k,-1,target); });
   });
 }
 
